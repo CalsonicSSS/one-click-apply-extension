@@ -1,41 +1,26 @@
-import { Input } from '@/components/ui/input';
-import { Link } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import '../styles';
+import '../globals.css';
 
 function IndexPopup() {
-	const [data, setData] = useState('');
+	const [count, setCount] = useState<number>(1);
 
 	return (
 		<div className='min-w-max space-y-4 p-4'>
-			<h2>
-				Welcome to your{' '}
-				<a href='https://www.plasmo.com' target='_blank'>
-					Plasmo
-				</a>{' '}
-				Extension!
-			</h2>
-			<Input
-				className='w-full'
-				value={data}
-				onChange={(e) => setData(e.target.value)}
-				placeholder='Type something...'
-			/>
-			<a
-				href='https://docs.plasmo.com'
-				target='_blank'
-				className='underline'
-			>
-				<span className='flex w-full flex-row items-center space-x-2'>
-					<Link size={12} />
-					<p>Learn more about Plasmo</p>
-				</span>
-			</a>
-			<p>
-				{data.length > 0
-					? `You typed: ${data}`
-					: 'Type something to see it here!'}
-			</p>
+			<h1>Welcome</h1>
+			<div className='flex items-center gap-3'>
+				<Button
+					onClick={() =>
+						setCount((pre: number) => {
+							return pre + 1;
+						})
+					}
+				>
+					Increase +
+				</Button>
+				<Badge>count: {count}</Badge>
+			</div>
 		</div>
 	);
 }

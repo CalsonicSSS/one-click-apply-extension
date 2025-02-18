@@ -1,9 +1,9 @@
 {
-	"name": "rttpes-chrome-extension-template",
-	"displayName": "RTTPES Chrome Extension Template",
+	"name": "plasmo-starter",
+	"displayName": "",
 	"version": "0.0.1",
-	"description": "The RTTPES Chrome Extension Template is a powerful starting point for building modern, high-performance Chrome extensions. RTTPES: React, TypeScript, Tailwind CSS, Prettier, ESLint, and ShadCN, all set up and ready to go with Plasmo, a fast and flexible framework for Chrome extensions.",
-	"author": "temrb",
+	"description": "",
+	"author": "Pillar.ai <calson.developer@gmail.com>",
 	"scripts": {
 		"dev": "plasmo dev",
 		"build": "plasmo build",
