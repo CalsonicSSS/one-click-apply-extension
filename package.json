@@ -1,8 +1,8 @@
 {
-	"name": "plasmo-starter",
-	"displayName": "",
+	"name": "wise-craft",
+	"displayName": "Wise Craft",
 	"version": "0.0.1",
-	"description": "",
+	"description": "Your tailored resume & CV, just one click away—on any job site you visit!",
 	"author": "Pillar.ai <calson.developer@gmail.com>",
 	"scripts": {
 		"dev": "plasmo dev",
@@ -40,6 +40,9 @@
 		"typescript": "5.3.3"
 	},
 	"manifest": {
+		"permissions": [
+			"storage"
+		],
 		"host_permissions": [
 			"https://*/*"
 		]
