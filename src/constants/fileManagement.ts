@@ -4,7 +4,6 @@ export const MAX_SUPPORTING_DOCS = 4; // Total 5 files max (1 resume + 4 support
 // browser environment will automatically detect the file type based on the MIME type when file is uploaded
 export const ALLOWED_FILE_TYPES = [
 	'application/pdf',
-	'application/msword',
 	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 	'text/plain',
 ];
@@ -12,7 +11,6 @@ export const ALLOWED_FILE_TYPES = [
 // this is to display the file type from matching MIME type in the UI and map to correct file type icon later
 export const FILE_TYPE_EXTENSIONS = {
 	'application/pdf': '.pdf',
-	'application/msword': '.doc',
 	'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
 		'.docx',
 	'text/plain': '.txt',

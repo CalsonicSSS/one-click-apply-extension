@@ -32,7 +32,7 @@ export const validateFileUpload = (
 	currentUploadedFiles: StoredFile[],
 ): string | null => {
 	if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-		return 'Invalid file type. Please upload PDF, DOC, DOCX, or TXT files only.';
+		return 'Invalid file type. Please upload PDF, DOCX, or TXT files only.';
 	}
 
 	// Calculate current total storage size
