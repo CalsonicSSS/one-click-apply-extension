@@ -1,4 +1,5 @@
 import { generateSuggestionsRequest, type SuggestionGenerationResponse } from '@/api/suggestionGeneration';
+import SuggestionDisplayPanel from '@/components/SuggestionResults/SuggestionDisplayPanel';
 import { Button } from '@/components/ui/button';
 import { useFileManagement } from '@/hooks/useFileManagement';
 import { extractPageContentFromActiveTab } from '@/utils/tabContentExtractor';
@@ -14,6 +15,7 @@ const IndexPopup = () => {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [generationError, setGenerationError] = useState<string | null>(null);
 	const [suggestionResults, setSuggestionResults] = useState<SuggestionGenerationResponse | null>(null);
+	const [showResults, setShowResults] = useState(false);
 
 	const handleFileChange = async (
 		event: ChangeEvent<HTMLInputElement>,
@@ -30,6 +32,7 @@ const IndexPopup = () => {
 	const handleGenerateSuggestions = async () => {
 		setGenerationError(null);
 		setSuggestionResults(null); // Clear any previous results
+		setShowResults(false);
 
 		// Check if a resume is uploaded
 		if (!storedFilesObj.resume) {
@@ -41,22 +44,26 @@ const IndexPopup = () => {
 			setIsGenerating(true);
 
 			// Extract content from the active tab
-			const pageExtractedResult = await extractPageContentFromActiveTab();
+			const pageExtractedResponse = await extractPageContentFromActiveTab();
 
-			const suggestionGenerationResult = await generateSuggestionsRequest(
-				pageExtractedResult.pageContent,
+			// send generation request
+			const suggestionGenerationResponse = await generateSuggestionsRequest(
+				pageExtractedResponse.pageContent,
 				storedFilesObj,
 			);
 
-			setSuggestionResults(suggestionGenerationResult);
-
-			// TODO: In the next step, we'll add code here to send this to the backend API
+			setSuggestionResults(suggestionGenerationResponse);
+			setShowResults(true); // Show results panel after successful generation
 		} catch (error) {
 			console.error('Error during suggestion generation process:', error);
 			setGenerationError(error.message);
 		} finally {
 			setIsGenerating(false);
 		}
+	};
+
+	const handleCloseResults = () => {
+		setShowResults(false);
 	};
 
 	if (isLoading) {
@@ -214,6 +221,11 @@ const IndexPopup = () => {
 					</Button>
 				</div>
 			</div>
+
+			{/* Results Display */}
+			{showResults && suggestionResults && (
+				<SuggestionDisplayPanel results={suggestionResults} onClose={handleCloseResults} />
+			)}
 		</div>
 	);
 };
