@@ -1,7 +1,4 @@
-import {
-	ALLOWED_FILE_TYPES,
-	MAX_TOTAL_STORAGE_SIZE,
-} from '@/constants/fileManagement';
+import { ALLOWED_FILE_TYPES, MAX_TOTAL_STORAGE_SIZE } from '@/constants/fileManagement';
 import type { FileCategoryType, StoredFile } from '@/types/fileManagement';
 import { formatDate } from './helpers';
 
@@ -27,10 +24,7 @@ export const calculateBase64Size = (file: File): number => {
 	return size;
 };
 
-export const validateFileUpload = (
-	file: File,
-	currentUploadedFiles: StoredFile[],
-): string | null => {
+export const validateFileUpload = (file: File, currentUploadedFiles: StoredFile[]): string | null => {
 	if (!ALLOWED_FILE_TYPES.includes(file.type)) {
 		return 'Invalid file type. Please upload PDF, DOCX, or TXT files only.';
 	}
@@ -51,10 +45,7 @@ export const validateFileUpload = (
 	return null;
 };
 
-export const createNewStoredFile = async (
-	file: File,
-	fileCategory: FileCategoryType,
-): Promise<StoredFile> => {
+export const createNewStoredFile = async (file: File, fileCategory: FileCategoryType): Promise<StoredFile> => {
 	const base64Content = await convertFileToBase64String(file);
 
 	return {

@@ -1,19 +1,19 @@
+import { generateSuggestionsRequest, type SuggestionGenerationResponse } from '@/api/suggestionGeneration';
 import { Button } from '@/components/ui/button';
 import { useFileManagement } from '@/hooks/useFileManagement';
+import { extractPageContentFromActiveTab } from '@/utils/tabContentExtractor';
 import { FileIcon, Trash2, Upload } from 'lucide-react';
-import { useRef, type ChangeEvent } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import '../globals.css';
 
 const IndexPopup = () => {
-	const {
-		storedFilesObj,
-		isLoading,
-		uploadAndStoreFile,
-		removeFile,
-		errorMessage,
-	} = useFileManagement();
+	const { storedFilesObj, isLoading, uploadAndStoreFile, removeFile, fileHandlingErrorMessage } = useFileManagement();
 	const resumeInputRef = useRef<HTMLInputElement>(null);
 	const supportingInputRef = useRef<HTMLInputElement>(null);
+
+	const [isGenerating, setIsGenerating] = useState(false);
+	const [generationError, setGenerationError] = useState<string | null>(null);
+	const [suggestionResults, setSuggestionResults] = useState<SuggestionGenerationResponse | null>(null);
 
 	const handleFileChange = async (
 		event: ChangeEvent<HTMLInputElement>,
@@ -23,6 +23,39 @@ const IndexPopup = () => {
 		if (file) {
 			await uploadAndStoreFile(file, fileCategoryType);
 			event.target.value = '';
+		}
+	};
+
+	// Function to handle the "Generate Suggestions" button click
+	const handleGenerateSuggestions = async () => {
+		setGenerationError(null);
+		setSuggestionResults(null); // Clear any previous results
+
+		// Check if a resume is uploaded
+		if (!storedFilesObj.resume) {
+			setGenerationError('Please upload your resume first before generating suggestions');
+			return;
+		}
+
+		try {
+			setIsGenerating(true);
+
+			// Extract content from the active tab
+			const pageExtractedResult = await extractPageContentFromActiveTab();
+
+			const suggestionGenerationResult = await generateSuggestionsRequest(
+				pageExtractedResult.pageContent,
+				storedFilesObj,
+			);
+
+			setSuggestionResults(suggestionGenerationResult);
+
+			// TODO: In the next step, we'll add code here to send this to the backend API
+		} catch (error) {
+			console.error('Error during suggestion generation process:', error);
+			setGenerationError(error.message);
+		} finally {
+			setIsGenerating(false);
 		}
 	};
 
@@ -39,22 +72,24 @@ const IndexPopup = () => {
 			<div className='flex flex-col'>
 				{/* Header */}
 				<div className='mb-6'>
-					<h1 className='text-2xl font-bold text-gray-900'>
-						Your Wise Craft
-					</h1>
-					<p className='mt-1 text-sm text-gray-500'>
-						Upload your documents to get started
-					</p>
+					<h1 className='text-2xl font-bold text-gray-900'>Your Wise Craft</h1>
+					<p className='mt-1 text-sm text-gray-500'>Upload your documents to get started</p>
 				</div>
 
-				{/* Error Message */}
-				{errorMessage && (
+				{/* File handling Error Message */}
+				{fileHandlingErrorMessage && (
 					<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
-						{errorMessage}
+						{fileHandlingErrorMessage}
 					</div>
 				)}
 
-				{/* Upload Buttons */}
+				{generationError && (
+					<div className='mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
+						{generationError}
+					</div>
+				)}
+
+				{/* Resume Upload Buttons */}
 				<div>
 					<Button
 						variant='outline'
@@ -87,20 +122,13 @@ const IndexPopup = () => {
 										<p className='text-sm font-medium text-gray-900'>
 											{storedFilesObj.resume.name}
 										</p>
-										<p className='text-xs text-gray-500'>
-											Resume
-										</p>
+										<p className='text-xs text-gray-500'>Resume</p>
 									</div>
 								</div>
 								<Button
 									variant='ghost'
 									size='sm'
-									onClick={() =>
-										removeFile(
-											storedFilesObj.resume!.id,
-											'resume',
-										)
-									}
+									onClick={() => removeFile(storedFilesObj.resume!.id, 'resume')}
 									className='text-gray-500 hover:text-red-500'
 								>
 									<Trash2 className='h-4 w-4' />
@@ -115,6 +143,7 @@ const IndexPopup = () => {
 				</div>
 
 				{/* ---------------------------------------------------------------------------------------------------------- */}
+				{/* supporting Upload Buttons */}
 
 				<div>
 					<Button
@@ -143,30 +172,21 @@ const IndexPopup = () => {
 				) : (
 					<div className='mt-4 space-y-4'>
 						{storedFilesObj.supportingDocs.map((doc) => (
-							<div
-								key={doc.id}
-								className='rounded-lg bg-gray-50 px-4 py-3'
-							>
+							<div key={doc.id} className='rounded-lg bg-gray-50 px-4 py-3'>
 								<div className='flex items-center justify-between'>
 									<div className='flex items-center space-x-3'>
 										<div className='rounded-md bg-white p-2 shadow-sm'>
 											<FileIcon className='h-4 w-4 text-green-500' />
 										</div>
 										<div>
-											<p className='text-sm font-medium text-gray-900'>
-												{doc.name}
-											</p>
-											<p className='text-xs text-gray-500'>
-												Supporting Document
-											</p>
+											<p className='text-sm font-medium text-gray-900'>{doc.name}</p>
+											<p className='text-xs text-gray-500'>Supporting Document</p>
 										</div>
 									</div>
 									<Button
 										variant='ghost'
 										size='sm'
-										onClick={() =>
-											removeFile(doc.id, 'supporting')
-										}
+										onClick={() => removeFile(doc.id, 'supporting')}
 										className='text-gray-500 hover:text-red-500'
 									>
 										<Trash2 className='h-4 w-4' />
@@ -176,6 +196,23 @@ const IndexPopup = () => {
 						))}
 					</div>
 				)}
+				<div className='mt-8'>
+					<Button
+						variant='default'
+						className='h-12 w-full bg-green-600 text-white hover:bg-green-700'
+						onClick={handleGenerateSuggestions}
+						disabled={isGenerating}
+					>
+						{isGenerating ? (
+							<span className='flex items-center justify-center'>
+								<span className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent'></span>
+								Generating...
+							</span>
+						) : (
+							'Generate Suggestions & Cover Letter'
+						)}
+					</Button>
+				</div>
 			</div>
 		</div>
 	);

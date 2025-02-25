@@ -1,27 +1,14 @@
 import { MAX_SUPPORTING_DOCS } from '@/constants/fileManagement';
-import type {
-	FileCategoryType,
-	FilesStorageState,
-	StoredFile,
-} from '@/types/fileManagement';
-import {
-	createNewStoredFile,
-	validateFileUpload,
-} from '@/utils/fileManagement';
+import type { FileCategoryType, FilesStorageState, StoredFile } from '@/types/fileManagement';
+import { createNewStoredFile, validateFileUpload } from '@/utils/fileManagement';
 import { useEffect, useState } from 'react';
 
 type UseFileManagementReturn = {
 	storedFilesObj: FilesStorageState;
 	isLoading: boolean;
-	uploadAndStoreFile: (
-		file: File,
-		docCategoryType: FileCategoryType,
-	) => Promise<void>;
-	removeFile: (
-		id: string,
-		docCategoryType: FileCategoryType,
-	) => Promise<void>;
-	errorMessage: string | null;
+	uploadAndStoreFile: (file: File, docCategoryType: FileCategoryType) => Promise<void>;
+	removeFile: (id: string, docCategoryType: FileCategoryType) => Promise<void>;
+	fileHandlingErrorMessage: string | null;
 };
 
 export const useFileManagement = (): UseFileManagementReturn => {
@@ -30,7 +17,7 @@ export const useFileManagement = (): UseFileManagementReturn => {
 		supportingDocs: [],
 	});
 	const [isLoading, setIsLoading] = useState(true);
-	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const [fileHandlingErrorMessage, setFileHandlingErrorMessage] = useState<string | null>(null);
 
 	useEffect(() => {
 		const loadFiles = async () => {
@@ -41,7 +28,7 @@ export const useFileManagement = (): UseFileManagementReturn => {
 				}
 			} catch (err) {
 				console.error('Error loading files upon onMount:', err);
-				setErrorMessage('Failed to load saved files');
+				setFileHandlingErrorMessage('Failed to load saved files');
 			} finally {
 				setIsLoading(false);
 			}
@@ -50,18 +37,13 @@ export const useFileManagement = (): UseFileManagementReturn => {
 	}, []);
 
 	// this function will update both the local state and the chrome storage
-	const updateFileStorageState = async (
-		newFileStorageState: FilesStorageState,
-	) => {
+	const updateFileStorageState = async (newFileStorageState: FilesStorageState) => {
 		await chrome.storage.local.set({ fileStorage: newFileStorageState });
 		setStoredFilesObj(newFileStorageState);
 	};
 
-	const uploadAndStoreFile = async (
-		file: File,
-		fileCategory: FileCategoryType,
-	): Promise<void> => {
-		setErrorMessage(null);
+	const uploadAndStoreFile = async (file: File, fileCategory: FileCategoryType): Promise<void> => {
+		setFileHandlingErrorMessage(null);
 
 		// Get current files array for size validation
 		const currentStoredFiles: StoredFile[] = [
@@ -70,13 +52,10 @@ export const useFileManagement = (): UseFileManagementReturn => {
 		];
 
 		// Validate file including total storage size check
-		const validationErrorMessage = validateFileUpload(
-			file,
-			currentStoredFiles,
-		);
+		const validationErrorMessage = validateFileUpload(file, currentStoredFiles);
 
 		if (validationErrorMessage) {
-			setErrorMessage(validationErrorMessage);
+			setFileHandlingErrorMessage(validationErrorMessage);
 		}
 
 		try {
@@ -88,32 +67,22 @@ export const useFileManagement = (): UseFileManagementReturn => {
 					resume: newStoredFile,
 				});
 			} else {
-				if (
-					storedFilesObj.supportingDocs.length >= MAX_SUPPORTING_DOCS
-				) {
-					setErrorMessage(
-						'Maximum number of supporting documents reached',
-					);
+				if (storedFilesObj.supportingDocs.length >= MAX_SUPPORTING_DOCS) {
+					setFileHandlingErrorMessage('Maximum number of supporting documents reached');
 				}
 
 				await updateFileStorageState({
 					...storedFilesObj,
-					supportingDocs: [
-						...storedFilesObj.supportingDocs,
-						newStoredFile,
-					],
+					supportingDocs: [...storedFilesObj.supportingDocs, newStoredFile],
 				});
 			}
 		} catch (err) {
-			console.log('Failed to upload file:', err);
-			setErrorMessage('Failed to upload file');
+			console.error('Failed to upload file:', err);
+			setFileHandlingErrorMessage('Failed to upload file');
 		}
 	};
 
-	const removeFile = async (
-		id: string,
-		type: FileCategoryType,
-	): Promise<void> => {
+	const removeFile = async (id: string, type: FileCategoryType): Promise<void> => {
 		try {
 			if (type === 'resume') {
 				await updateFileStorageState({
@@ -123,14 +92,12 @@ export const useFileManagement = (): UseFileManagementReturn => {
 			} else {
 				await updateFileStorageState({
 					...storedFilesObj,
-					supportingDocs: storedFilesObj.supportingDocs.filter(
-						(doc) => doc.id !== id,
-					),
+					supportingDocs: storedFilesObj.supportingDocs.filter((doc) => doc.id !== id),
 				});
 			}
 		} catch (err) {
-			console.log('Failed to remove file:', err);
-			setErrorMessage('Failed to remove file');
+			console.error('Failed to remove file:', err);
+			setFileHandlingErrorMessage('Failed to remove file');
 		}
 	};
 
@@ -139,6 +106,6 @@ export const useFileManagement = (): UseFileManagementReturn => {
 		isLoading,
 		uploadAndStoreFile,
 		removeFile,
-		errorMessage,
+		fileHandlingErrorMessage,
 	};
 };
