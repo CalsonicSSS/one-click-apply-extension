@@ -19,7 +19,7 @@ const SuggestionDisplayPanel = ({ results, onClose }: SuggestionDisplayPanelProp
 			<div className='fixed inset-0 bg-black/20' onClick={onClose} />
 
 			{/* Results Panel */}
-			<div className='relative flex h-full w-[350px] flex-col bg-white shadow-xl animate-in slide-in-from-right'>
+			<div className='relative flex h-full w-[400px] flex-col bg-white shadow-xl animate-in slide-in-from-right'>
 				{/* Header */}
 				<div className='border-b p-4'>
 					<h2 className='text-xl font-semibold'>Tailored Suggestions</h2>

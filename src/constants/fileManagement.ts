@@ -7,13 +7,5 @@ export const ALLOWED_FILE_TYPES = [
 	'text/plain',
 ];
 
-// this is to display the file type from matching MIME type in the UI and map to correct file type icon later
-export const FILE_TYPE_EXTENSIONS = {
-	'application/pdf': '.pdf',
-	'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-		'.docx',
-	'text/plain': '.txt',
-};
-
 // 1kb = 1024 bytes, 1MB = 1024kb
 export const MAX_TOTAL_STORAGE_SIZE = 5 * 1024 * 1024; // 5MB in bytes this is cap to max crhome.storage.local limit

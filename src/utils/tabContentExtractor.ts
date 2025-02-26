@@ -12,10 +12,7 @@ export const extractPageContentFromActiveTab = async (): Promise<PageExtractionR
 		const activeTab = tabs[0];
 
 		if (!activeTab || !activeTab.id) {
-			return {
-				success: false,
-				error: 'No active tab found',
-			};
+			throw new Error('No active job page found');
 		}
 
 		// This sends a message to the content script running in a specific tab (identified by tabId).
@@ -23,7 +20,12 @@ export const extractPageContentFromActiveTab = async (): Promise<PageExtractionR
 		const response = await chrome.tabs.sendMessage(activeTab.id, { action: 'getPageContent' });
 		return response;
 	} catch (error) {
-		console.error('Error extracting content from active tab:', error);
-		throw new Error(`Error extracting content from active tab`);
+		if (error.message === 'No active job page found') {
+			console.error('Error extracting content from active tab:', error);
+			throw error;
+		} else {
+			console.error('Error extracting content from active tab:', error);
+			throw new Error(`Error extracting content: ${error}`);
+		}
 	}
 };
