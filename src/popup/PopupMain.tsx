@@ -1,7 +1,7 @@
 import FileTypeIcon from '@/components/FileTypeIcon';
 import SuggestionDisplayPanel from '@/components/SuggestionResults/SuggestionDisplayPanel';
 import { Button } from '@/components/ui/button';
-import { MAX_TOTAL_STORAGE_SIZE } from '@/constants/fileManagement';
+import { TIER_ONE_USER_CREDIT_COUNT } from '@/constants/environments';
 import { useFileManagement } from '@/hooks/useFileManagement';
 import { useSuggestionGenerationProcess } from '@/hooks/useSuggestionGeneration';
 import { Trash2, Upload } from 'lucide-react';
@@ -9,17 +9,12 @@ import { useRef, type ChangeEvent } from 'react';
 import '../globals.css';
 
 const PopupMain = () => {
-	const {
-		storedFilesObj,
-		isLoading,
-		uploadAndStoreFile,
-		removeFile,
-		fileHandlingErrorMessage,
-		totalStorageUsed,
-		storagePercentage,
-	} = useFileManagement();
+	const { storedFilesObj, isLoading, uploadAndStoreFile, removeFile, fileHandlingErrorMessage } = useFileManagement();
 
 	const {
+		suggestionCreditUsagePercentage,
+		usedSuggestionCredits,
+		usedSuggestionCreditsLoadingErrMessage,
 		mutation: {
 			isError: isSuggestionGenerationError,
 			error: suggestionGenerationError,
@@ -111,16 +106,24 @@ const PopupMain = () => {
 					</div>
 				)}
 
-				{/* Storage capacity bar */}
+				{usedSuggestionCreditsLoadingErrMessage && (
+					<div className='mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
+						{fileHandlingErrorMessage}
+					</div>
+				)}
+
+				{/* suggestion credit usage capacity bar */}
 				<div className='mb-4'>
-					<div className='mb-1 flex justify-between text-xs text-gray-500'>
-						<span>{Math.round(totalStorageUsed / 1024)} KB used</span>
-						<span>{Math.round(MAX_TOTAL_STORAGE_SIZE / 1024 / 1024)} MB capacity</span>
+					<div className='mb-2 flex justify-between text-xs text-gray-500'>
+						<span>{suggestionCreditUsagePercentage} % used</span>
+						<span>
+							{usedSuggestionCredits} / {TIER_ONE_USER_CREDIT_COUNT}{' '}
+						</span>
 					</div>
 					<div className='h-1.5 w-full overflow-hidden rounded-full bg-gray-200'>
 						<div
 							className='h-full rounded-full bg-blue-600'
-							style={{ width: `${storagePercentage}%` }}
+							style={{ width: `${suggestionCreditUsagePercentage}%` }}
 						></div>
 					</div>
 				</div>

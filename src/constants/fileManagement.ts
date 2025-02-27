@@ -8,4 +8,4 @@ export const ALLOWED_FILE_TYPES = [
 ];
 
 // 1kb = 1024 bytes, 1MB = 1024kb
-export const MAX_TOTAL_STORAGE_SIZE = 5 * 1024 * 1024; // 5MB in bytes this is cap to max crhome.storage.local limit
+export const MAX_ALLOWED_TOTAL_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes this is cap to max crhome.storage.local limit

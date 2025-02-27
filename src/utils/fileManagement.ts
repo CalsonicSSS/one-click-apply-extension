@@ -1,4 +1,4 @@
-import { ALLOWED_FILE_TYPES, MAX_TOTAL_STORAGE_SIZE } from '@/constants/fileManagement';
+import { ALLOWED_FILE_TYPES, MAX_ALLOWED_TOTAL_FILE_SIZE } from '@/constants/fileManagement';
 import type { FileCategoryType, StoredFile } from '@/types/fileManagement';
 import { formatDate } from './helpers';
 
@@ -21,7 +21,7 @@ export const convertFileToBase64String = (file: File): Promise<string> => {
 
 export const calculateBase64Size = (file: File): number => {
 	const size = Math.ceil(file.size * (4 / 3));
-	return size;
+	return size; // gives the size of the file in bytes ((KB), (MB), (GB) and terabytes (TB) are byte-based.
 };
 
 export const validateFileUpload = (file: File, currentUploadedFiles: StoredFile[]): string | null => {
@@ -38,8 +38,8 @@ export const validateFileUpload = (file: File, currentUploadedFiles: StoredFile[
 	const newFileBase64Size = calculateBase64Size(file);
 
 	// Check if adding new file would exceed storage limit
-	if (currentTotalSize + newFileBase64Size > MAX_TOTAL_STORAGE_SIZE) {
-		return 'Total storage limit exceeded. Please remove some files before uploading new ones.';
+	if (currentTotalSize + newFileBase64Size > MAX_ALLOWED_TOTAL_FILE_SIZE) {
+		return 'Total allowed file storage exceeded. Please remove some files before uploading new ones.';
 	}
 
 	return null;

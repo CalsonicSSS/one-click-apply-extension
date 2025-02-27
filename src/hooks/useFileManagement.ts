@@ -1,4 +1,4 @@
-import { MAX_SUPPORTING_DOCS, MAX_TOTAL_STORAGE_SIZE } from '@/constants/fileManagement';
+import { MAX_SUPPORTING_DOCS } from '@/constants/fileManagement';
 import type { FileCategoryType, FilesStorageState, StoredFile } from '@/types/fileManagement';
 import { createNewStoredFile, validateFileUpload } from '@/utils/fileManagement';
 import { useEffect, useState } from 'react';
@@ -9,8 +9,6 @@ type UseFileManagementReturn = {
 	uploadAndStoreFile: (file: File, docCategoryType: FileCategoryType) => Promise<void>;
 	removeFile: (id: string, docCategoryType: FileCategoryType) => Promise<void>;
 	fileHandlingErrorMessage: string | null;
-	totalStorageUsed: number;
-	storagePercentage: number;
 };
 
 export const useFileManagement = (): UseFileManagementReturn => {
@@ -37,22 +35,6 @@ export const useFileManagement = (): UseFileManagementReturn => {
 		};
 		loadFiles();
 	}, []);
-
-	const calculateTotalStorageUsed = (): number => {
-		let total = 0;
-		if (storedFilesObj.resume) {
-			total += storedFilesObj.resume.base64Size;
-		}
-
-		storedFilesObj.supportingDocs.forEach((doc) => {
-			total += doc.base64Size;
-		});
-
-		return total;
-	};
-
-	const totalStorageUsed = calculateTotalStorageUsed();
-	const storagePercentage = Math.min(100, Math.round((totalStorageUsed / MAX_TOTAL_STORAGE_SIZE) * 100));
 
 	// this function will update both the local state and the chrome storage
 	const updateFileStorageState = async (newFileStorageState: FilesStorageState) => {
@@ -125,7 +107,5 @@ export const useFileManagement = (): UseFileManagementReturn => {
 		uploadAndStoreFile,
 		removeFile,
 		fileHandlingErrorMessage,
-		totalStorageUsed,
-		storagePercentage,
 	};
 };
