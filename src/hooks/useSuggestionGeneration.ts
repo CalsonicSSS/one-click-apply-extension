@@ -1,9 +1,39 @@
 import { generateSuggestionsRequest } from '@/api/suggestionGeneration';
 import { TIER_ONE_USER_CREDIT_COUNT } from '@/constants/environments';
 import type { FilesStorageState } from '@/types/fileManagement';
-import { extractPageContentFromActiveTab } from '@/utils/tabContentExtractor';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+
+type PageExtractionResult = {
+	success: boolean;
+	pageContent?: string;
+	url?: string;
+	error?: string;
+};
+
+export const extractPageContentFromActiveTab = async (): Promise<PageExtractionResult> => {
+	try {
+		// Query for the active tab in the current window
+		const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+		const activeTab = tabs[0];
+
+		if (!activeTab || !activeTab.id) {
+			throw new Error('No active job page found');
+		}
+
+		// chrome.tabs.sendMessage specifically designed to send messages to content scripts in a specific tab, we need to have tabId.
+		const response = await chrome.tabs.sendMessage(activeTab.id, { action: 'getPageContent' });
+		return response;
+	} catch (error) {
+		if (error.message === 'No active job page found') {
+			console.error('Error extracting content from active tab:', error);
+			throw error;
+		} else {
+			console.error('Error extracting content from active tab:', error);
+			throw new Error(`Error extracting content: ${error}`);
+		}
+	}
+};
 
 export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState) => {
 	const [showResults, setShowResults] = useState(false);
@@ -13,7 +43,7 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 	);
 
 	useEffect(() => {
-		const loadCredit = async () => {
+		const loadUsedSuggestionCreditCount = async () => {
 			try {
 				const result = await chrome.storage.local.get('usedSuggestionCreditsCount');
 				if (result.usedSuggestionCreditsCount) {
@@ -24,7 +54,7 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 				setUsedSuggestionCreditsLoadingErrMessage('Failed to load suggestion credit count');
 			}
 		};
-		loadCredit();
+		loadUsedSuggestionCreditCount();
 	}, []);
 
 	const handleGenerateSuggestionsProcess = async () => {

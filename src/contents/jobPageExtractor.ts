@@ -12,36 +12,52 @@ export const config: PlasmoCSConfig = {
 // Function to extract HTML content from the page - only called when requested
 function extractPageContent(): string {
 	try {
-		// Get the entire body HTML content
-		const bodyContent = document.body.innerHTML;
-		return bodyContent;
+		// Clone the body to avoid modifying the actual page
+		const clonedBody = document.body.cloneNode(true) as HTMLElement;
+
+		// Remove non-essential tags
+		const tagsToRemove = [
+			'script',
+			'style',
+			'noscript',
+			'iframe',
+			'object',
+			'embed',
+			'svg',
+			'canvas',
+			'meta',
+			'link',
+		];
+		tagsToRemove.forEach((tag) => {
+			clonedBody.querySelectorAll(tag).forEach((el) => el.remove());
+		});
+
+		// Return the cleaned inner HTML
+		return clonedBody.innerHTML;
 	} catch (error) {
 		console.error('Error extracting page content:', error);
 		return '';
 	}
 }
 
-// This listener is used to receive messages sent via chrome.tabs.sendMessage or chrome.runtime.sendMessage.
-// chrome.runtime.onMessage is a general-purpose listener that can receive messages from many sources
+// chrome.runtime.onMessage is a general-purpose listener that can receive messages from many sources (through runtime or tab)
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	console.log('Message received in content script:', message);
 
-	// Only extract content when specifically requested
 	if (message.action === 'getPageContent') {
 		try {
 			const pageContent = extractPageContent();
-			console.log('Content extracted successfully');
-			// sendResponse: the object we make here will be "response" object for sendMessage
+			// sendResponse is to make and send the object we make here as "response" object for the code that sends Message
 			sendResponse({
 				success: true,
 				pageContent: pageContent,
 				url: window.location.href,
 			});
 		} catch (error) {
-			console.error('Error processing content extraction request:', error);
+			console.error('Error processing content extraction:', error);
 			sendResponse({
 				success: false,
-				error: `Failed to extract page content: ${error}`,
+				error: `Error processing content extraction: ${error}`,
 			});
 		}
 	}
@@ -49,5 +65,3 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	// Return true to indicate we will send a response asynchronously
 	return true;
 });
-
-console.log('Job page detector script loaded and ready');
