@@ -49,11 +49,7 @@
 		"host_permissions": [
 			"https://*/*"
 		],
-		"side_panel": {
-			"default_path": "sidepanel.html"
-		},
 		"action": {
-			"default_popup": "popup.html",
 			"default_title": "Open Wise Craft"
 		},
 		"web_accessible_resources": [
