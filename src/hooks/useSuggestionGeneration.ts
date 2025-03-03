@@ -1,5 +1,6 @@
 import { generateSuggestionsRequest } from '@/api/suggestionGeneration';
 import { TIER_ONE_USER_CREDIT_COUNT } from '@/constants/environments';
+import type { SuggestionGenerationResponse } from '@/types/apis/suggestionGeneration';
 import type { FilesStorageState } from '@/types/fileManagement';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -21,7 +22,7 @@ export const extractPageContentFromActiveTab = async (): Promise<PageExtractionR
 			throw new Error('No active job page found');
 		}
 
-		// chrome.tabs.sendMessage specifically designed to send messages to content scripts in a specific tab, we need to have tabId.
+		// chrome.tabs.sendMessage specifically designed to send messages to content scripts in a specific tab
 		const response = await chrome.tabs.sendMessage(activeTab.id, { action: 'getPageContent' });
 		return response;
 	} catch (error) {
@@ -36,30 +37,35 @@ export const extractPageContentFromActiveTab = async (): Promise<PageExtractionR
 };
 
 export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState) => {
-	const [showResults, setShowResults] = useState(false);
 	const [usedSuggestionCredits, setUsedSuggestionCredits] = useState<number>(0);
-	const [usedSuggestionCreditsLoadingErrMessage, setUsedSuggestionCreditsLoadingErrMessage] = useState<string | null>(
-		null,
-	);
 
+	const [lastSuggestion, setLastSuggestion] = useState<SuggestionGenerationResponse | null>(null);
+	const [lastSuggestionAndCreditUsedLoadingErrMessage, setLastSuggestionAndCreditUsedLoadingErrMessage] = useState<
+		string | null
+	>(null);
+
+	// Load credits and previously generated results on mount
 	useEffect(() => {
-		const loadUsedSuggestionCreditCount = async () => {
+		const loadData = async () => {
 			try {
-				const result = await chrome.storage.local.get('usedSuggestionCreditsCount');
-				if (result.usedSuggestionCreditsCount) {
+				const result = await chrome.storage.local.get([
+					'usedSuggestionCreditsCount',
+					'lastGeneratedSuggestion',
+				]);
+				if (result.lastGeneratedSuggestion) {
+					setLastSuggestion(result.lastGeneratedSuggestion);
 					setUsedSuggestionCredits(result.usedSuggestionCreditsCount);
 				}
 			} catch (err) {
-				console.error('Error loading suggestion credits count:', err);
-				setUsedSuggestionCreditsLoadingErrMessage('Failed to load suggestion credit count');
+				console.error('Error loading data (last suggesstion or credit used):', err);
+				setLastSuggestionAndCreditUsedLoadingErrMessage('Failed to load last suggestion or credit used count');
 			}
 		};
-		loadUsedSuggestionCreditCount();
+		loadData();
 	}, []);
 
 	const handleGenerateSuggestionsProcess = async () => {
-		setShowResults(false);
-		setUsedSuggestionCreditsLoadingErrMessage(null);
+		setLastSuggestionAndCreditUsedLoadingErrMessage(null);
 
 		// Fetch current page content
 		const pageExtractedResponse = await extractPageContentFromActiveTab();
@@ -70,14 +76,18 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 			storedFilesObj: storedFilesObj,
 		});
 
-		// Update state and storage correctly
+		// Update credits count + store in storage
 		setUsedSuggestionCredits((prevCredits: number) => {
 			const updatedUsedSuggestionCreditsCount = prevCredits + 1;
 			chrome.storage.local.set({ usedSuggestionCreditsCount: updatedUsedSuggestionCreditsCount });
 			return updatedUsedSuggestionCreditsCount;
 		});
 
-		setShowResults(true);
+		// Store suggestionGenerationResponse as "lastGeneratedSuggestion" at this moment
+		await chrome.storage.local.set({
+			lastGeneratedSuggestion: suggestionGenerationResponse,
+		});
+
 		return suggestionGenerationResponse;
 	};
 
@@ -92,10 +102,9 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 
 	return {
 		mutation,
-		showResults,
-		setShowResults,
 		usedSuggestionCredits,
-		usedSuggestionCreditsLoadingErrMessage,
+		lastSuggestionAndCreditUsedLoadingErrMessage,
 		suggestionCreditUsagePercentage,
+		lastSuggestion,
 	};
 };

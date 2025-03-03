@@ -1,12 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import PopupMain from './PopupMain';
+import '../globals.css';
+import SidePanelMain from './SidePanelMain';
 
 export const queryClient = new QueryClient();
 
-const Index = () => (
+const SidePanel = () => (
 	<QueryClientProvider client={queryClient}>
-		<PopupMain />
+		<SidePanelMain />
 	</QueryClientProvider>
 );
 
-export default Index;
+export default SidePanel;
