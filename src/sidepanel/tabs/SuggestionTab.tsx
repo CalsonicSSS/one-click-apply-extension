@@ -4,14 +4,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type SuggestionGenerationResponse } from '@/types/apis/suggestionGeneration';
 import { useState } from 'react';
 
-interface SuggestionTabProps {
-	results: SuggestionGenerationResponse | null | undefined;
-}
+type SuggestionTabProps = {
+	suggestionResults: SuggestionGenerationResponse | null | undefined;
+};
 
-const SuggestionTab = ({ results }: SuggestionTabProps) => {
+const SuggestionTab = ({ suggestionResults }: SuggestionTabProps) => {
 	const [innerTab, setInnerTab] = useState<'resume' | 'coverLetter'>('resume');
 
-	if (!results) {
+	if (!suggestionResults) {
 		return (
 			<div className='flex h-full items-center justify-center'>
 				<p className='max-w-md text-center text-gray-500'>
@@ -24,8 +24,8 @@ const SuggestionTab = ({ results }: SuggestionTabProps) => {
 	return (
 		<div className='flex h-full flex-col'>
 			<div className='mb-4'>
-				<h2 className='text-lg font-medium'>Results for: {results.job_title_name}</h2>
-				<p className='text-sm text-gray-500'>Company: {results.company_name}</p>
+				<h2 className='text-base font-medium'>{suggestionResults.job_title_name}</h2>
+				<p className='text-sm text-gray-500'>Company: {suggestionResults.company_name}</p>
 			</div>
 
 			<Tabs
@@ -33,17 +33,21 @@ const SuggestionTab = ({ results }: SuggestionTabProps) => {
 				onValueChange={(value) => setInnerTab(value as 'resume' | 'coverLetter')}
 				className='flex flex-1 flex-col'
 			>
-				<TabsList className='mb-4 grid w-full grid-cols-2'>
+				<TabsList className='mb-4 grid w-full grid-cols-2 text-sm'>
 					<TabsTrigger value='resume'>Resume Suggestions</TabsTrigger>
 					<TabsTrigger value='coverLetter'>Cover Letter</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value='resume' className='flex-1 overflow-auto'>
-					<ResumeSuggestions suggestions={results.resume_suggestions} />
+					<ResumeSuggestions suggestions={suggestionResults.resume_suggestions} />
 				</TabsContent>
 
 				<TabsContent value='coverLetter' className='flex-1 overflow-auto'>
-					<CoverLetterSuggestion coverLetter={results.cover_letter} />
+					<CoverLetterSuggestion
+						coverLetter={suggestionResults.cover_letter}
+						applicant_name={suggestionResults.applicant_name}
+						jobTitle={suggestionResults.job_title_name}
+					/>
 				</TabsContent>
 			</Tabs>
 		</div>

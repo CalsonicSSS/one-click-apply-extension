@@ -49,11 +49,11 @@ const ProfileTab = ({
 	return (
 		<div className='flex flex-col space-y-6'>
 			{/* File upload buttons */}
-			<div className='flex space-x-2'>
+			<div className='flex space-x-3'>
 				<Button
-					variant='outline'
+					variant='default'
 					size='sm'
-					className='flex items-center bg-blue-600 text-white hover:bg-blue-700'
+					className='w-full items-center hover:opacity-90'
 					onClick={() => resumeInputRef.current?.click()}
 				>
 					<Upload className='mr-1 h-3.5 w-3.5' />
@@ -61,9 +61,9 @@ const ProfileTab = ({
 				</Button>
 
 				<Button
-					variant='outline'
+					variant='default'
 					size='sm'
-					className='flex items-center bg-blue-600 text-white hover:bg-blue-700'
+					className='w-full items-center hover:opacity-90'
 					onClick={() => supportingInputRef.current?.click()}
 				>
 					<Upload className='mr-1 h-3.5 w-3.5' />
@@ -102,7 +102,7 @@ const ProfileTab = ({
 
 			{/* Credit usage capacity bar */}
 			<div>
-				<div className='mb-2 flex justify-between text-xs text-gray-500'>
+				<div className='mb-2 flex justify-between text-xs text-gray-600'>
 					<span>{suggestionCreditUsagePercentage}% used</span>
 					<span>
 						{usedSuggestionCredits} / {TIER_ONE_USER_CREDIT_COUNT}
@@ -110,7 +110,7 @@ const ProfileTab = ({
 				</div>
 				<div className='h-1.5 w-full overflow-hidden rounded-full bg-gray-200'>
 					<div
-						className='h-full rounded-full bg-blue-600'
+						className='h-full rounded-full bg-black'
 						style={{ width: `${suggestionCreditUsagePercentage}%` }}
 					></div>
 				</div>
@@ -179,7 +179,7 @@ const ProfileTab = ({
 			{/* Generate Button */}
 			<Button
 				variant='default'
-				className='h-12 w-full bg-green-600 text-white hover:bg-green-700'
+				className='h-12 w-full hover:opacity-90'
 				onClick={onGenerateSuggestions}
 				disabled={isSuggestionGenerationPending || !storedFilesObj.resume}
 			>
@@ -189,7 +189,7 @@ const ProfileTab = ({
 						Generating...
 					</span>
 				) : (
-					'Generate Resume Suggestions & Cover Letter'
+					'Generate Suggestions'
 				)}
 			</Button>
 		</div>

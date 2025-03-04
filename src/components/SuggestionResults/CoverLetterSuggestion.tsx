@@ -1,8 +1,23 @@
-import { CheckCircle, Copy, Download } from 'lucide-react';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { handleDownloadDocx, handleDownloadPdf } from '@/utils/helpers';
+import { CheckCircle, Copy, Download, FileDown } from 'lucide-react';
 import { useState } from 'react';
 
-const CoverLetterSuggestion = ({ coverLetter }: { coverLetter: string }) => {
+type CoverLetterSuggestionTabProps = {
+	coverLetter: string;
+	applicant_name: string;
+	jobTitle: string;
+};
+
+const CoverLetterSuggestion = ({ coverLetter, applicant_name, jobTitle }: CoverLetterSuggestionTabProps) => {
 	const [copied, setCopied] = useState(false);
+	const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+	const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
 
 	const handleCopy = () => {
 		navigator.clipboard.writeText(coverLetter);
@@ -10,25 +25,28 @@ const CoverLetterSuggestion = ({ coverLetter }: { coverLetter: string }) => {
 		setTimeout(() => setCopied(false), 2000);
 	};
 
-	const handleDownload = () => {
-		// Create a blob with the cover letter text
-		const blob = new Blob([coverLetter], { type: 'text/plain' });
-		const url = URL.createObjectURL(blob);
+	const onDownloadDocx = async () => {
+		setIsDownloadingDocx(true);
+		try {
+			await handleDownloadDocx({ coverLetter, applicant_name, jobTitle });
+		} finally {
+			setIsDownloadingDocx(false);
+		}
+	};
 
-		// Create a temporary anchor element and trigger download
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = 'Cover_Letter.txt';
-		a.click();
-
-		// Clean up
-		URL.revokeObjectURL(url);
+	const onDownloadPdf = async () => {
+		setIsDownloadingPdf(true);
+		try {
+			await handleDownloadPdf({ coverLetter, applicant_name, jobTitle });
+		} finally {
+			setIsDownloadingPdf(false);
+		}
 	};
 
 	return (
 		<div className='space-y-4'>
 			<div className='mb-2 flex items-center justify-between'>
-				<h3 className='font-medium'>Your Tailored Cover Letter</h3>
+				<h3 className='font-medium'>Tailored Cover Letter</h3>
 				<div className='flex space-x-2'>
 					<button
 						className='flex items-center rounded-md bg-gray-100 p-1.5 text-xs hover:bg-gray-200'
@@ -46,13 +64,51 @@ const CoverLetterSuggestion = ({ coverLetter }: { coverLetter: string }) => {
 							</>
 						)}
 					</button>
-					<button
-						className='flex items-center rounded-md bg-gray-100 p-1.5 text-xs hover:bg-gray-200'
-						onClick={handleDownload}
-					>
-						<Download className='mr-1 h-3.5 w-3.5' />
-						<span>Download</span>
-					</button>
+
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<button className='flex items-center rounded-md bg-gray-100 p-1.5 text-xs hover:bg-gray-200'>
+								<Download className='mr-1 h-3.5 w-3.5' />
+								<span>Download</span>
+							</button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align='end' className='w-44'>
+							<DropdownMenuItem
+								onClick={onDownloadDocx}
+								disabled={isDownloadingDocx}
+								className='cursor-pointer'
+							>
+								{isDownloadingDocx ? (
+									<>
+										<span className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600'></span>
+										<span>Downloading...</span>
+									</>
+								) : (
+									<>
+										<FileDown className='mr-2 h-4 w-4' />
+										<span>Raw Word (.docx)</span>
+									</>
+								)}
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={onDownloadPdf}
+								disabled={isDownloadingPdf}
+								className='cursor-pointer'
+							>
+								{isDownloadingPdf ? (
+									<>
+										<span className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600'></span>
+										<span>Downloading...</span>
+									</>
+								) : (
+									<>
+										<FileDown className='mr-2 h-4 w-4' />
+										<span>Formatted PDF (.pdf)</span>
+									</>
+								)}
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
 			</div>
 

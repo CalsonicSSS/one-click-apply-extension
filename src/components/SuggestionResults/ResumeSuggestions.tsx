@@ -1,4 +1,4 @@
-import type { ResumeSuggestion } from '@/api/suggestionGeneration';
+import type { ResumeSuggestion } from '@/types/apis/suggestionGeneration';
 import { CheckCircle, Copy } from 'lucide-react';
 import { useState } from 'react';
 
@@ -12,22 +12,18 @@ const ResumeSuggestions = ({ suggestions }: { suggestions: ResumeSuggestion[] })
 	};
 
 	return (
-		<div className='space-y-4'>
-			<p className='mb-4 text-sm text-gray-500'>
-				We've found {suggestions.length} tailored improvements for your resume.
-			</p>
-
+		<div className=''>
 			{suggestions.map((suggestion, index) => (
-				<div key={index} className='overflow-hidden rounded-lg border border-gray-200'>
+				<div key={index} className='mb-8 overflow-hidden rounded-lg border border-gray-200'>
 					{/* Location in resume */}
 					<div className='border-b bg-gray-50 px-4 py-2'>
-						<h3 className='text-sm font-medium'>Location in resume:</h3>
+						<h3 className='text-sm font-medium'>Resume location:</h3>
 						<p className='text-xs text-gray-600'>{suggestion.where}</p>
 					</div>
 
 					{/* Suggested change */}
 					<div className='border-b px-4 py-3'>
-						<div className='flex items-start justify-between'>
+						<div className='mb-2 flex items-start justify-between'>
 							<h3 className='mb-1 text-sm font-medium'>Suggested change:</h3>
 							<button
 								className='rounded-full p-1 text-gray-500 hover:text-blue-600'
@@ -40,14 +36,14 @@ const ResumeSuggestions = ({ suggestions }: { suggestions: ResumeSuggestion[] })
 								)}
 							</button>
 						</div>
-						<p className='rounded-md border border-blue-100 bg-blue-50 p-2 text-sm'>
+						<p className='mb-2 rounded-md border border-blue-100 bg-blue-50 p-2 text-sm'>
 							{suggestion.suggestion}
 						</p>
 					</div>
 
 					{/* Reason */}
 					<div className='bg-gray-50 px-4 py-3'>
-						<h3 className='mb-1 text-sm font-medium'>Why this helps:</h3>
+						<h3 className='mb-1 text-sm font-medium'>Reason:</h3>
 						<p className='text-xs text-gray-600'>{suggestion.reason}</p>
 					</div>
 				</div>

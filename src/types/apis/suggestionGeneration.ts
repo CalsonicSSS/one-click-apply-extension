@@ -21,6 +21,7 @@ export type ResumeSuggestion = {
 export type SuggestionGenerationResponse = {
 	company_name: string;
 	job_title_name: string;
+	applicant_name: string;
 	resume_suggestions: ResumeSuggestion[];
 	cover_letter: string;
 };

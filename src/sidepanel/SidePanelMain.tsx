@@ -38,14 +38,6 @@ const SidePanelMain = () => {
 		}
 	}, [suggestionGenerationData]);
 
-	// Display appropriate title based on current tab
-	const getPageTitle = () => {
-		if (currentTabId && lastSuggestion) {
-			return lastSuggestion.job_title_name || 'Wise Craft';
-		}
-		return 'Wise Craft';
-	};
-
 	const handleGenerateSuggestions = () => {
 		suggestionGenerationMutate();
 	};
@@ -64,18 +56,18 @@ const SidePanelMain = () => {
 	return (
 		<div className='flex h-screen w-full flex-col bg-white'>
 			{/* Header */}
-			<div className='border-b p-4'>
-				<h1 className='text-2xl font-bold text-gray-900'>{getPageTitle()}</h1>
+			<div className='p-4'>
+				<h1 className='text-2xl font-bold text-gray-900'>Wise Craft</h1>
 				<p className='text-sm text-gray-500'>Your tailored resume & CV, just one click away</p>
 			</div>
 
-			<Tabs value={activeTab} onValueChange={setActiveTab} className='flex flex-1 flex-col overflow-hidden'>
+			<Tabs value={activeTab} onValueChange={setActiveTab} className='flex flex-1 flex-col overflow-hidden px-4'>
 				<TabsList className='grid w-full grid-cols-2'>
 					<TabsTrigger value='profile'>Profile</TabsTrigger>
-					<TabsTrigger value='suggestion'>Tailored Suggestion</TabsTrigger>
+					<TabsTrigger value='suggestion'>Suggestions</TabsTrigger>
 				</TabsList>
 
-				<TabsContent value='profile' className='flex-1 overflow-auto p-4'>
+				<TabsContent value='profile' className='flex-1 overflow-auto py-4'>
 					<ProfileTab
 						storedFilesObj={storedFilesObj}
 						fileHandlingErrorMessage={fileHandlingErrorMessage}
@@ -91,8 +83,8 @@ const SidePanelMain = () => {
 					/>
 				</TabsContent>
 
-				<TabsContent value='suggestion' className='flex-1 overflow-auto p-4'>
-					<SuggestionTab results={suggestionResults} />
+				<TabsContent value='suggestion' className='flex-1 overflow-auto py-4'>
+					<SuggestionTab suggestionResults={suggestionResults} />
 				</TabsContent>
 			</Tabs>
 		</div>
