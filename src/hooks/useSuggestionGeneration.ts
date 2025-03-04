@@ -37,34 +37,85 @@ export const extractPageContentFromActiveTab = async (): Promise<PageExtractionR
 };
 
 export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState) => {
+	const [currentTabId, setCurrentTabId] = useState<number | null>(null);
 	const [usedSuggestionCredits, setUsedSuggestionCredits] = useState<number>(0);
-
 	const [lastSuggestion, setLastSuggestion] = useState<SuggestionGenerationResponse | null>(null);
 	const [lastSuggestionAndCreditUsedLoadingErrMessage, setLastSuggestionAndCreditUsedLoadingErrMessage] = useState<
 		string | null
 	>(null);
 
-	// Load credits and previously generated results on mount
+	// Get the current tab ID when the hook initializes
 	useEffect(() => {
-		const loadData = async () => {
+		const getCurrentTabId = async () => {
 			try {
-				const result = await chrome.storage.local.get([
-					'usedSuggestionCreditsCount',
-					'lastGeneratedSuggestion',
-				]);
-				if (result.lastGeneratedSuggestion) {
-					setLastSuggestion(result.lastGeneratedSuggestion);
-					setUsedSuggestionCredits(result.usedSuggestionCreditsCount);
+				const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+				if (tabs[0]?.id) {
+					setCurrentTabId(tabs[0].id);
 				}
 			} catch (err) {
-				console.error('Error loading data (last suggesstion or credit used):', err);
-				setLastSuggestionAndCreditUsedLoadingErrMessage('Failed to load last suggestion or credit used count');
+				console.error('Error getting current tab ID:', err);
 			}
 		};
-		loadData();
+		getCurrentTabId();
 	}, []);
 
+	// Load credits and tab-specific generation results
+	useEffect(() => {
+		const loadData = async () => {
+			if (!currentTabId) return;
+
+			try {
+				const result = await chrome.storage.local.get(['usedSuggestionCreditsCount', 'tabSuggestions']);
+
+				setUsedSuggestionCredits(result.usedSuggestionCreditsCount || 0);
+
+				// Get tab-specific suggestion if available
+				const tabSuggestions = result.tabSuggestions || {};
+				if (tabSuggestions[currentTabId]) {
+					setLastSuggestion(tabSuggestions[currentTabId]);
+				} else {
+					setLastSuggestion(null);
+				}
+			} catch (err) {
+				console.error('Error loading tab-specific data:', err);
+				setLastSuggestionAndCreditUsedLoadingErrMessage('Failed to load suggestion and credit count data');
+			}
+		};
+
+		loadData();
+	}, [currentTabId]);
+
+	useEffect(() => {
+		const syncUsedCreditSuggestionCountChange = (
+			changes: { [key: string]: chrome.storage.StorageChange },
+			areaName: string,
+		) => {
+			// Only react to changes in local storage
+			if (areaName !== 'local') return;
+
+			// Update credit usage if it changed
+			if (changes.usedSuggestionCreditsCount) {
+				const newValue = changes.usedSuggestionCreditsCount.newValue;
+				if (newValue !== undefined) {
+					setUsedSuggestionCredits(newValue);
+				}
+			}
+		};
+
+		// Add the listener
+		chrome.storage.onChanged.addListener(syncUsedCreditSuggestionCountChange);
+
+		// Clean up the listener when the component unmounts
+		return () => {
+			chrome.storage.onChanged.removeListener(syncUsedCreditSuggestionCountChange);
+		};
+	}, [currentTabId]);
+
 	const handleGenerateSuggestionsProcess = async () => {
+		if (!currentTabId) {
+			throw new Error('No active tab found');
+		}
+
 		setLastSuggestionAndCreditUsedLoadingErrMessage(null);
 
 		// Fetch current page content
@@ -76,17 +127,21 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 			storedFilesObj: storedFilesObj,
 		});
 
-		// Update credits count + store in storage
-		setUsedSuggestionCredits((prevCredits: number) => {
-			const updatedUsedSuggestionCreditsCount = prevCredits + 1;
-			chrome.storage.local.set({ usedSuggestionCreditsCount: updatedUsedSuggestionCreditsCount });
-			return updatedUsedSuggestionCreditsCount;
-		});
+		// Increment credit usage via background script to prevent race conditions
+		const response = await chrome.runtime.sendMessage({ action: 'incrementCredits' });
+		if (response && response.success) {
+			setUsedSuggestionCredits(response.newCount);
+		}
 
-		// Store suggestionGenerationResponse as "lastGeneratedSuggestion" at this moment
-		await chrome.storage.local.set({
-			lastGeneratedSuggestion: suggestionGenerationResponse,
-		});
+		// Store tab-specific suggestion
+		const result = await chrome.storage.local.get('tabSuggestions');
+		const tabSuggestions = result.tabSuggestions || {};
+
+		// Update this tab's suggestion
+		tabSuggestions[currentTabId] = suggestionGenerationResponse;
+
+		// Save to storage
+		await chrome.storage.local.set({ tabSuggestions });
 
 		return suggestionGenerationResponse;
 	};
@@ -106,5 +161,6 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 		lastSuggestionAndCreditUsedLoadingErrMessage,
 		suggestionCreditUsagePercentage,
 		lastSuggestion,
+		currentTabId,
 	};
 };

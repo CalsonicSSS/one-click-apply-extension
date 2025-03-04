@@ -21,6 +21,7 @@ const SidePanelMain = () => {
 		usedSuggestionCredits,
 		lastSuggestionAndCreditUsedLoadingErrMessage,
 		lastSuggestion,
+		currentTabId,
 		mutation: {
 			isError: isSuggestionGenerationError,
 			error: suggestionGenerationError,
@@ -36,6 +37,14 @@ const SidePanelMain = () => {
 			setActiveTab('suggestion');
 		}
 	}, [suggestionGenerationData]);
+
+	// Display appropriate title based on current tab
+	const getPageTitle = () => {
+		if (currentTabId && lastSuggestion) {
+			return lastSuggestion.job_title_name || 'Wise Craft';
+		}
+		return 'Wise Craft';
+	};
 
 	const handleGenerateSuggestions = () => {
 		suggestionGenerationMutate();
@@ -56,7 +65,7 @@ const SidePanelMain = () => {
 		<div className='flex h-screen w-full flex-col bg-white'>
 			{/* Header */}
 			<div className='border-b p-4'>
-				<h1 className='text-2xl font-bold text-gray-900'>Wise Craft</h1>
+				<h1 className='text-2xl font-bold text-gray-900'>{getPageTitle()}</h1>
 				<p className='text-sm text-gray-500'>Your tailored resume & CV, just one click away</p>
 			</div>
 

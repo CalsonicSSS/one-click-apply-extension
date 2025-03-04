@@ -1,50 +1,105 @@
-# RTTPES Chrome Extension Template
+# Wise Craft - AI-Powered Job Search Chrome Extension
 
-The RTTPES Chrome Extension Template is a powerful starting point for building modern, high-performance Chrome extensions.
+![Wise Craft Logo](https://your-logo-url.com/logo.png)
 
-RTTPES:
+## 🚀 Overview
 
--   React
--   TypeScript
--   Tailwind CSS
--   Prettier
--   ESLint
--   ShadCN
+Wise Craft is a powerful Chrome extension that streamlines your job search by generating tailored resumes and cover letters directly on job sites. With one click, Wise Craft analyzes job descriptions and provides AI-driven resume suggestions to improve your chances of landing an interview.
 
-This is a [Plasmo extension](https://docs.plasmo.com/) project bootstrapped with [`plasmo init`](https://www.npmjs.com/package/plasmo).
+## 🎯 Features
 
-## Getting Started
+-   📝 **AI Resume Optimization**: Get personalized resume suggestions based on job descriptions.
+-   📄 **Instant Cover Letter Generation**: AI-generated cover letters tailored to each job posting.
+-   📂 **File Management**: Upload and store your resume and supporting documents securely.
+-   🌐 **Works on Any Job Site**: Supports all job boards and company career pages.
+-   🎯 **Easy Side Panel Access**: Seamless integration with Chrome’s side panel.
 
-First, install packages:
+## 🛠️ Tech Stack
 
-```bash
-pnpm i
-# or
-npm i
+-   **Framework**: React, TypeScript
+-   **UI Library**: TailwindCSS, Radix UI
+-   **State Management**: React Query
+-   **Storage**: Chrome Local Storage
+-   **Build Tool**: Plasmo Framework
+
+## 📦 Installation
+
+### 1️⃣ Clone the Repository
+
+```sh
+git clone https://github.com/your-username/wise-craft.git
+cd wise-craft
 ```
 
-Then, run the development server:
+### 2️⃣ Install Dependencies
 
-```bash
-pnpm dev
-# or
+```sh
+npm install
+```
+
+### 3️⃣ Start Development Server
+
+```sh
 npm run dev
 ```
 
-Open your browser and load the appropriate development build. For example, if you are developing for the chrome browser, using manifest v3, use: `build/chrome-mv3-dev`.
+### 4️⃣ Build & Package the Extension
 
-You can start editing the popup by modifying `popup.tsx`. It should auto-update as you make changes. To add an options page, simply add a `options.tsx` file to the root of the project, with a react component default exported. Likewise to add a content page, add a `content.ts` file to the root of the project, importing some module and do some logic, then reload the extension on your browser.
-
-For further guidance, [visit our Documentation](https://docs.plasmo.com/)
-
-## Making production build
-
-Run the following:
-
-```bash
-pnpm build
-# or
+```sh
 npm run build
+npm run package
 ```
 
-This should create a production bundle for your extension, ready to be zipped and published to the stores!
+## 🖥️ File Structure
+
+```
+wise-craft/
+│── src/
+│   ├── background.ts       # Manages Chrome extension events
+│   ├── contents/           # Content scripts for job page extraction
+│   ├── sidepanel/          # UI for the extension side panel
+│   ├── hooks/              # Custom React hooks
+│   ├── utils/              # Helper functions
+│   ├── types/              # TypeScript type definitions
+│   ├── constants/          # Constants (e.g., API URLs, file limits)
+│── manifest.json          # Chrome extension manifest
+│── package.json           # Project metadata and dependencies
+│── tsconfig.json          # TypeScript configuration
+│── tailwind.config.js     # TailwindCSS configuration
+│── README.md              # This file!
+```
+
+## ⚡ Usage
+
+1. **Install the extension** in Chrome Developer Mode by loading the `/dist` folder.
+2. **Navigate to a job posting** on any job site.
+3. **Click the Wise Craft icon** in the Chrome toolbar.
+4. **Upload your resume** and generate AI-powered suggestions instantly.
+
+## 🔧 Development Notes
+
+-   The extension leverages `chrome.sidePanel.setOptions()` to control panel visibility per tab.
+-   The `content script` extracts job descriptions by stripping unnecessary HTML elements.
+-   The `background script` manages Chrome API interactions.
+
+## 🛠️ Contributing
+
+We welcome contributions! To contribute:
+
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature-branch`).
+3. Make your changes and commit (`git commit -m 'Add feature'`).
+4. Push to your branch (`git push origin feature-branch`).
+5. Open a Pull Request.
+
+## 📜 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+## 📩 Contact
+
+For questions, reach out to **Pillar.ai** at [calson.developer@gmail.com](mailto:calson.developer@gmail.com).
+
+---
+
+🚀 **Enhance your job search with AI-powered resume suggestions!**

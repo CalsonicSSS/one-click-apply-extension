@@ -19,6 +19,7 @@ export const useFileManagement = (): UseFileManagementReturn => {
 	const [isLoading, setIsLoading] = useState(true);
 	const [fileHandlingErrorMessage, setFileHandlingErrorMessage] = useState<string | null>(null);
 
+	// Load files on initial mount
 	useEffect(() => {
 		const loadFiles = async () => {
 			try {
@@ -36,10 +37,34 @@ export const useFileManagement = (): UseFileManagementReturn => {
 		loadFiles();
 	}, []);
 
-	// this function will update both the local state and the chrome storage
+	// Add storage change listener for real-time synchronization
+	useEffect(() => {
+		const syncFileStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+			// Only react to changes in local storage
+			if (areaName !== 'local') return;
+
+			// Check if fileStorage changed
+			if (changes.fileStorage && !isLoading) {
+				const newValue = changes.fileStorage.newValue;
+				if (newValue) {
+					// Update local state to match storage
+					setStoredFilesObj(newValue);
+				}
+			}
+		};
+
+		// Add the listener
+		chrome.storage.onChanged.addListener(syncFileStorageChange);
+
+		// Clean up the listener when the component unmounts
+		return () => {
+			chrome.storage.onChanged.removeListener(syncFileStorageChange);
+		};
+	}, [isLoading]); // Only re-add the listener if isLoading changes
+
+	// This function will update both the local state and the chrome storage
 	const updateFileStorageState = async (newFileStorageState: FilesStorageState) => {
 		await chrome.storage.local.set({ fileStorage: newFileStorageState });
-		setStoredFilesObj(newFileStorageState);
 	};
 
 	const uploadAndStoreFile = async (file: File, fileCategory: FileCategoryType): Promise<void> => {
@@ -56,6 +81,7 @@ export const useFileManagement = (): UseFileManagementReturn => {
 
 		if (validationErrorMessage) {
 			setFileHandlingErrorMessage(validationErrorMessage);
+			return;
 		}
 
 		try {
@@ -69,6 +95,7 @@ export const useFileManagement = (): UseFileManagementReturn => {
 			} else {
 				if (storedFilesObj.supportingDocs.length >= MAX_SUPPORTING_DOCS) {
 					setFileHandlingErrorMessage('Maximum number of supporting documents reached');
+					return;
 				}
 
 				await updateFileStorageState({
