@@ -1,7 +1,12 @@
-import { generateSuggestionsRequest } from '@/api/suggestionGeneration';
+import {
+	evaluateJobPostingPageRequest,
+	generateCoverLetterRequest,
+	generateResumeSuggestionRequest,
+} from '@/api/suggestionGeneration';
 import { TIER_ONE_USER_CREDIT_COUNT } from '@/constants/environments';
-import type { SuggestionGenerationResponse } from '@/types/apis/suggestionGeneration';
 import type { FilesStorageState } from '@/types/fileManagement';
+import { GenerationStage, type GenerationProgress } from '@/types/progressTracking';
+import type { FullSuggestionGeneration } from '@/types/suggestionGeneration';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
@@ -39,10 +44,11 @@ export const extractPageContentFromActiveTab = async (): Promise<PageExtractionR
 export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState) => {
 	const [currentTabId, setCurrentTabId] = useState<number | null>(null);
 	const [usedSuggestionCredits, setUsedSuggestionCredits] = useState<number>(0);
-	const [lastSuggestion, setLastSuggestion] = useState<SuggestionGenerationResponse | null>(null);
+	const [lastSuggestion, setLastSuggestion] = useState<FullSuggestionGeneration | null>(null);
 	const [lastSuggestionAndCreditUsedLoadingErrMessage, setLastSuggestionAndCreditUsedLoadingErrMessage] = useState<
 		string | null
 	>(null);
+	const [generationProgress, setGenerationProgress] = useState<GenerationProgress | null>(null);
 
 	// Get the current tab ID when the hook initializes
 	useEffect(() => {
@@ -116,34 +122,75 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 			throw new Error('No active tab found');
 		}
 
+		// Reset error message
 		setLastSuggestionAndCreditUsedLoadingErrMessage(null);
 
-		// Fetch current page content
-		const pageExtractedResponse = await extractPageContentFromActiveTab();
+		try {
+			// STEP 1: Extract page content
+			setGenerationProgress({
+				stagePercentage: GenerationStage.ANALYZING_JOB_POSTING,
+				message: 'Analyzing job posting content...',
+			});
 
-		// Send generation request
-		const suggestionGenerationResponse = await generateSuggestionsRequest({
-			pageContent: pageExtractedResponse.pageContent,
-			storedFilesObj: storedFilesObj,
-		});
+			const pageExtractedResponse = await extractPageContentFromActiveTab();
+			const jobPostingEvaluationResult = await evaluateJobPostingPageRequest(pageExtractedResponse.pageContent);
 
-		// Increment credit usage via background script to prevent race conditions
-		const response = await chrome.runtime.sendMessage({ action: 'incrementCredits' });
-		if (response && response.success) {
-			setUsedSuggestionCredits(response.newCount);
+			// STEP 2: Generate resume suggestions
+			setGenerationProgress({
+				stagePercentage: GenerationStage.GENERATING_RESUME_SUGGESTIONS,
+				message: 'Generating tailored resume suggestions...',
+			});
+
+			const resumeSuggestionsResult = await generateResumeSuggestionRequest({
+				extractedJobPostingDetails: jobPostingEvaluationResult.extracted_job_posting_details,
+				storedFilesObj,
+			});
+
+			// STEP 3: Generate cover letter
+			setGenerationProgress({
+				stagePercentage: GenerationStage.CREATING_COVER_LETTER,
+				message: 'Generating tailored cover letter...',
+			});
+
+			const coverLetterResponseResult = await generateCoverLetterRequest({
+				extractedJobPostingDetails: jobPostingEvaluationResult.extracted_job_posting_details,
+				storedFilesObj,
+			});
+
+			// STEP 4: Complete - combine all results into FullSuggestionGeneration
+			setGenerationProgress({
+				stagePercentage: GenerationStage.COMPLETED,
+				message: 'Generation process complete!',
+			});
+
+			// Combine results into a single object
+			const combinedResults: FullSuggestionGeneration = {
+				job_title_name: coverLetterResponseResult.job_title_name,
+				company_name: coverLetterResponseResult.company_name,
+				applicant_name: coverLetterResponseResult.applicant_name,
+				cover_letter: coverLetterResponseResult.cover_letter,
+				location: coverLetterResponseResult.location,
+				resume_suggestions: resumeSuggestionsResult.resume_suggestions,
+			};
+
+			// Increment credit usage via background script to prevent race conditions
+			const response = await chrome.runtime.sendMessage({ action: 'incrementCredits' });
+			if (response && response.success) {
+				setUsedSuggestionCredits(response.newCount);
+			}
+
+			// Store tab-specific suggestion
+			const result = await chrome.storage.local.get('tabSuggestions');
+			const tabSuggestions = result.tabSuggestions || {};
+			tabSuggestions[currentTabId] = combinedResults;
+			await chrome.storage.local.set({ tabSuggestions });
+
+			return combinedResults;
+		} catch (error) {
+			// Reset progress on error
+			setGenerationProgress(null);
+			throw error; // Re-throw to be handled by the mutation
 		}
-
-		// Store tab-specific suggestion
-		const result = await chrome.storage.local.get('tabSuggestions');
-		const tabSuggestions = result.tabSuggestions || {};
-
-		// Update this tab's suggestion
-		tabSuggestions[currentTabId] = suggestionGenerationResponse;
-
-		// Save to storage
-		await chrome.storage.local.set({ tabSuggestions });
-
-		return suggestionGenerationResponse;
 	};
 
 	const suggestionCreditUsagePercentage = Math.min(
@@ -162,5 +209,6 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 		suggestionCreditUsagePercentage,
 		lastSuggestion,
 		currentTabId,
+		generationProgress, // Add this line to expose progress state
 	};
 };

@@ -1,7 +1,7 @@
 import CoverLetterSuggestion from '@/components/SuggestionResults/CoverLetterSuggestion';
 import ResumeSuggestions from '@/components/SuggestionResults/ResumeSuggestions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { type SuggestionGenerationResponse } from '@/types/apis/suggestionGeneration';
+import { type SuggestionGenerationResponse } from '@/types/suggestionGeneration';
 import { useState } from 'react';
 
 type SuggestionTabProps = {

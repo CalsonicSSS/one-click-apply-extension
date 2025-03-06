@@ -72,7 +72,7 @@ const CoverLetterSuggestion = ({ coverLetter, applicant_name, jobTitle }: CoverL
 								<span>Download</span>
 							</button>
 						</DropdownMenuTrigger>
-						<DropdownMenuContent align='end' className='w-44'>
+						<DropdownMenuContent align='end' className='w-[200px]'>
 							<DropdownMenuItem
 								onClick={onDownloadDocx}
 								disabled={isDownloadingDocx}
@@ -86,7 +86,7 @@ const CoverLetterSuggestion = ({ coverLetter, applicant_name, jobTitle }: CoverL
 								) : (
 									<>
 										<FileDown className='mr-2 h-4 w-4' />
-										<span>Raw Word (.docx)</span>
+										<span className='hover:font-medium'>Raw Word (.docx)</span>
 									</>
 								)}
 							</DropdownMenuItem>
@@ -103,7 +103,7 @@ const CoverLetterSuggestion = ({ coverLetter, applicant_name, jobTitle }: CoverL
 								) : (
 									<>
 										<FileDown className='mr-2 h-4 w-4' />
-										<span>Formatted PDF (.pdf)</span>
+										<span className='hover:font-medium'>Formatted PDF (.pdf)</span>
 									</>
 								)}
 							</DropdownMenuItem>

@@ -9,37 +9,6 @@ export const config: PlasmoCSConfig = {
 	all_frames: false,
 };
 
-// // Function to extract HTML content from the page - only called when requested
-// function extractPageContent(): string {
-// 	try {
-// 		// Clone the body to avoid modifying the actual page
-// 		const clonedBody = document.body.cloneNode(true) as HTMLElement;
-
-// 		// Remove non-essential tags
-// 		const tagsToRemove = [
-// 			'script',
-// 			'style',
-// 			'noscript',
-// 			'iframe',
-// 			'object',
-// 			'embed',
-// 			'svg',
-// 			'canvas',
-// 			'meta',
-// 			'link',
-// 		];
-// 		tagsToRemove.forEach((tag) => {
-// 			clonedBody.querySelectorAll(tag).forEach((el) => el.remove());
-// 		});
-
-// 		// Return the cleaned inner HTML
-// 		return clonedBody.innerHTML;
-// 	} catch (error) {
-// 		console.error('Error extracting page content:', error);
-// 		return '';
-// 	}
-// }
-
 // Maximum content length in characters to prevent token overflow
 // Setting to approximately 50,000 characters which is roughly around 12,500 tokens
 // This gives a safe margin below the 200,000 token limit

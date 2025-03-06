@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useFileManagement } from '@/hooks/useFileManagement';
 import { useSuggestionGenerationProcess } from '@/hooks/useSuggestionGeneration';
+import { GenerationStage } from '@/types/progressTracking';
 import { useEffect, useState } from 'react';
 import ProfileTab from './tabs/ProfileTab';
 import SuggestionTab from './tabs/SuggestionTab';
@@ -22,6 +23,7 @@ const SidePanelMain = () => {
 		lastSuggestionAndCreditUsedLoadingErrMessage,
 		lastSuggestion,
 		currentTabId,
+		generationProgress, // Add this to destructuring
 		mutation: {
 			isError: isSuggestionGenerationError,
 			error: suggestionGenerationError,
@@ -33,10 +35,16 @@ const SidePanelMain = () => {
 
 	// Switch to suggestion tab when new results are available
 	useEffect(() => {
-		if (suggestionGenerationData) {
-			setActiveTab('suggestion');
+		if (suggestionGenerationData && generationProgress?.stagePercentage === GenerationStage.COMPLETED) {
+			// Add a small delay before switching to the suggestion tab
+			const timer = setTimeout(() => {
+				setActiveTab('suggestion');
+			}, 1000); // 1 second delay
+
+			// Clean up timer if component unmounts
+			return () => clearTimeout(timer);
 		}
-	}, [suggestionGenerationData]);
+	}, [suggestionGenerationData, generationProgress]);
 
 	const handleGenerateSuggestions = () => {
 		suggestionGenerationMutate();
@@ -80,6 +88,7 @@ const SidePanelMain = () => {
 						suggestionGenerationError={suggestionGenerationError}
 						isSuggestionGenerationPending={isSuggestionGenerationPending}
 						onGenerateSuggestions={handleGenerateSuggestions}
+						generationProgress={generationProgress}
 					/>
 				</TabsContent>
 

@@ -1,11 +1,14 @@
 import FileTypeIcon from '@/components/FileTypeIcon';
+import GenerationProgressBar from '@/components/GenerationProgressBar';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { TIER_ONE_USER_CREDIT_COUNT } from '@/constants/environments';
 import type { FilesStorageState } from '@/types/fileManagement';
+import { GenerationStage, type GenerationProgress } from '@/types/progressTracking';
 import { Trash2, Upload } from 'lucide-react';
 import { useRef, type ChangeEvent } from 'react';
 
-interface ProfileTabProps {
+type ProfileTabProps = {
 	storedFilesObj: FilesStorageState;
 	fileHandlingErrorMessage: string | null;
 	lastSuggestionAndCreditUsedLoadingErrMessage: string | null;
@@ -17,7 +20,8 @@ interface ProfileTabProps {
 	suggestionGenerationError: Error;
 	isSuggestionGenerationPending: boolean;
 	onGenerateSuggestions: () => void;
-}
+	generationProgress: GenerationProgress | null;
+};
 
 const ProfileTab = ({
 	storedFilesObj,
@@ -31,6 +35,7 @@ const ProfileTab = ({
 	suggestionGenerationError,
 	isSuggestionGenerationPending,
 	onGenerateSuggestions,
+	generationProgress,
 }: ProfileTabProps) => {
 	const resumeInputRef = useRef<HTMLInputElement>(null);
 	const supportingInputRef = useRef<HTMLInputElement>(null);
@@ -46,29 +51,46 @@ const ProfileTab = ({
 		}
 	};
 
+	const showProgressBar =
+		isSuggestionGenerationPending || generationProgress?.stagePercentage === GenerationStage.COMPLETED;
+
 	return (
 		<div className='flex flex-col space-y-6'>
 			{/* File upload buttons */}
-			<div className='flex space-x-3'>
+			<div className='grid w-full grid-cols-2 gap-x-3'>
 				<Button
 					variant='default'
 					size='sm'
-					className='w-full items-center hover:opacity-90'
+					className='items-center hover:opacity-90'
 					onClick={() => resumeInputRef.current?.click()}
 				>
 					<Upload className='mr-1 h-3.5 w-3.5' />
-					Resume*
+					{'Resume *'}
 				</Button>
-
-				<Button
-					variant='default'
-					size='sm'
-					className='w-full items-center hover:opacity-90'
-					onClick={() => supportingInputRef.current?.click()}
-				>
-					<Upload className='mr-1 h-3.5 w-3.5' />
-					Supporting
-				</Button>
+				<TooltipProvider delayDuration={300}>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								variant='default'
+								size='sm'
+								className='items-center hover:opacity-90'
+								onClick={() => supportingInputRef.current?.click()}
+							>
+								<Upload className='mr-1 h-3.5 w-3.5' />
+								Additional
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent
+							side='top'
+							align='center'
+							className='w-[180px] rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-700 shadow-lg'
+						>
+							<p className='text-center'>
+								Add more details like a base cover letter or other relevant context for better results.
+							</p>
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
 
 				{/* Hidden file inputs */}
 				<input
@@ -86,20 +108,17 @@ const ProfileTab = ({
 					accept='.pdf,.docx,.txt'
 				/>
 			</div>
-
 			{/* Error messages */}
 			{fileHandlingErrorMessage && (
 				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
 					{fileHandlingErrorMessage}
 				</div>
 			)}
-
 			{lastSuggestionAndCreditUsedLoadingErrMessage && (
 				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
 					{lastSuggestionAndCreditUsedLoadingErrMessage}
 				</div>
 			)}
-
 			{/* Credit usage capacity bar */}
 			<div>
 				<div className='mb-2 flex justify-between text-xs text-gray-600'>
@@ -115,7 +134,6 @@ const ProfileTab = ({
 					></div>
 				</div>
 			</div>
-
 			{/* Files Section */}
 			<div className='space-y-2'>
 				{/* Resume File */}
@@ -168,14 +186,12 @@ const ProfileTab = ({
 					</div>
 				)}
 			</div>
-
 			{/* Suggestion generation error */}
 			{isSuggestionGenerationError && (
 				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
 					{suggestionGenerationError.message}
 				</div>
 			)}
-
 			{/* Generate Button */}
 			<Button
 				variant='default'
@@ -192,6 +208,8 @@ const ProfileTab = ({
 					'Generate Suggestions'
 				)}
 			</Button>
+			{/* Add progress bar below the button */}
+			{showProgressBar && <GenerationProgressBar progress={generationProgress} className='mt-2' />}
 		</div>
 	);
 };

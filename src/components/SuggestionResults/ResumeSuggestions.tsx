@@ -1,4 +1,4 @@
-import type { ResumeSuggestion } from '@/types/apis/suggestionGeneration';
+import type { ResumeSuggestion } from '@/types/suggestionGeneration';
 import { CheckCircle, Copy } from 'lucide-react';
 import { useState } from 'react';
 
