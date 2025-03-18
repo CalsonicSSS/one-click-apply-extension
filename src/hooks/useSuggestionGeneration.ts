@@ -13,31 +13,25 @@ import { useEffect, useState } from 'react';
 type PageExtractionResult = {
 	success: boolean;
 	pageContent?: string;
-	url?: string;
-	error?: string;
+	url: string;
+	errorMessage?: string;
 };
 
 export const extractPageContentFromActiveTab = async (): Promise<PageExtractionResult> => {
-	try {
-		// Query for the active tab in the current window
-		const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-		const activeTab = tabs[0];
+	// Query for the active tab in the current window
+	const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+	const activeTab = tabs[0];
 
-		if (!activeTab || !activeTab.id) {
-			throw new Error('No active job page found');
-		}
+	if (!activeTab || !activeTab.id) {
+		throw new Error('No active job page found');
+	}
 
-		// chrome.tabs.sendMessage specifically designed to send messages to content scripts in a specific tab
-		const response = await chrome.tabs.sendMessage(activeTab.id, { action: 'getPageContent' });
+	// chrome.tabs.sendMessage specifically designed to send messages to content scripts in a specific tab
+	const response = await chrome.tabs.sendMessage(activeTab.id, { action: 'getPageContent' });
+	if (response.success) {
 		return response;
-	} catch (error) {
-		if (error.message === 'No active job page found') {
-			console.error('Error extracting content from active tab:', error);
-			throw error;
-		} else {
-			console.error('Error extracting content from active tab:', error);
-			throw new Error(`Error extracting content: ${error}`);
-		}
+	} else {
+		throw new Error(response.errorMessage);
 	}
 };
 
@@ -65,7 +59,7 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 		getCurrentTabId();
 	}, []);
 
-	// Load credits and tab-specific generation results
+	// Load tab-specific credits and last generation results
 	useEffect(() => {
 		const loadData = async () => {
 			if (!currentTabId) return;
@@ -83,8 +77,8 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 					setLastSuggestion(null);
 				}
 			} catch (err) {
-				console.error('Error loading tab-specific data:', err);
-				setLastSuggestionAndCreditUsedLoadingErrMessage('Failed to load suggestion and credit count data');
+				console.error('Error loading tab-specific last suggestion & credit count data:', err);
+				setLastSuggestionAndCreditUsedLoadingErrMessage('Failed to load last suggestion and credit count data');
 			}
 		};
 
@@ -108,7 +102,8 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 			}
 		};
 
-		// Add the listener
+		// This useEffect is to essentially Add the listener here,
+		// this will centrally react to any changes in usedSuggestionCreditsCount handled in the background script
 		chrome.storage.onChanged.addListener(syncUsedCreditSuggestionCountChange);
 
 		// Clean up the listener when the component unmounts
@@ -164,7 +159,7 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 			});
 
 			// Combine results into a single object
-			const combinedResults: FullSuggestionGeneration = {
+			const newSuggestionCombinedResults: FullSuggestionGeneration = {
 				job_title_name: coverLetterResponseResult.job_title_name,
 				company_name: coverLetterResponseResult.company_name,
 				applicant_name: coverLetterResponseResult.applicant_name,
@@ -175,17 +170,17 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 
 			// Increment credit usage via background script to prevent race conditions
 			const response = await chrome.runtime.sendMessage({ action: 'incrementCredits' });
-			if (response && response.success) {
-				setUsedSuggestionCredits(response.newCount);
-			}
+			// if (response && response.success) {
+			// 	setUsedSuggestionCredits(response.newCount);
+			// }
 
-			// Store tab-specific suggestion
+			// Store / update existing tab-specific suggestion
 			const result = await chrome.storage.local.get('tabSuggestions');
-			const tabSuggestions = result.tabSuggestions || {};
-			tabSuggestions[currentTabId] = combinedResults;
-			await chrome.storage.local.set({ tabSuggestions });
+			const currentTabSuggestions = result.tabSuggestions || {};
+			currentTabSuggestions[currentTabId] = newSuggestionCombinedResults;
+			await chrome.storage.local.set({ currentTabSuggestions });
 
-			return combinedResults;
+			return newSuggestionCombinedResults;
 		} catch (error) {
 			// Reset progress on error
 			setGenerationProgress(null);
@@ -209,6 +204,6 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 		suggestionCreditUsagePercentage,
 		lastSuggestion,
 		currentTabId,
-		generationProgress, // Add this line to expose progress state
+		generationProgress,
 	};
 };

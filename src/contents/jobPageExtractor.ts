@@ -1,5 +1,8 @@
 import type { PlasmoCSConfig } from 'plasmo';
 
+// Automatically RUNS on every matching page (if specified in manifest.json).
+// This script is injected into the page and runs in the context of the page itself. It has the DOM access of current page automatically.
+// you can also specific when to auto run this script in the manifest.json file
 export const config: PlasmoCSConfig = {
 	matches: ['<all_urls>'],
 	all_frames: false, // Keep this as false to avoid unnecessary complexity
@@ -18,6 +21,17 @@ function extractMeaningfulContent(element: HTMLElement): string {
 
 	// Return the cleaned inner HTML
 	return element.innerHTML;
+}
+
+// Truncate content to stay within maximum allowed length
+function truncateContent(content: string): string {
+	if (!content || content.length <= MAX_CONTENT_LENGTH) {
+		return content;
+	}
+
+	// If content exceeds max length, truncate it
+	const truncated = content.substring(0, MAX_CONTENT_LENGTH);
+	return truncated + '\n\n[Content truncated due to length limitations]';
 }
 
 // Function to extract content from the main page and meaningful iframes
@@ -54,20 +68,7 @@ function extractPageContent(): string {
 	}
 }
 
-/**
- * Truncate content to stay within maximum allowed length
- */
-function truncateContent(content: string): string {
-	if (!content || content.length <= MAX_CONTENT_LENGTH) {
-		return content;
-	}
-
-	// If content exceeds max length, truncate it
-	const truncated = content.substring(0, MAX_CONTENT_LENGTH);
-	return truncated + '\n\n[Content truncated due to length limitations]';
-}
-
-// Listen for messages from the extension
+// Listen for messages
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	console.log('Message received in content script:', message);
 
@@ -80,10 +81,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 				url: window.location.href,
 			});
 		} catch (error) {
-			console.error('Error processing content extraction:', error);
+			console.error('Error processing page content extraction:', error);
 			sendResponse({
 				success: false,
-				error: `Error processing content extraction: ${error}`,
+				errorMessage: error.message,
+				url: window.location.href,
 			});
 		}
 	}

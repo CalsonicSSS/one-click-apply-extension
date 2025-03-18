@@ -1,10 +1,14 @@
 // Background script for side panel management
-// background script in Chrome extensions is a single global instance that runs in the background of the whole browser
-// There is only ONE instance of this background script running, not one per tab. It persists for the entire browser session while your extension is enabled
+// background script in Chrome extensions is a SINGLE global instance that runs in the background
+// There is only ONE instance of this background script running, not one per tab basis. It persists for the entire browser session while your extension is enabled
 // Think of it as a "control tower" that can see and manage all tabs
+// it runs as long as:
+// 1. Chrome Browser is Open → Even if you open multiple tabs or windows, the background script is shared across all.
+// 2. The Extension is Installed & Enabled → The script will be available as long as the extension is added and not disabled.
+// under manifest v3, background script is leveraged by service worker: only runs when needed (e.g., responding to events / messages). It gets unloaded when idle.
 
 // we are making the side panel feature to be tab specific instead of globally persistent
-// we remove the {side_panel default_path} in the manifest setting at root level, which will be available across all tabs, overrides code to manage panels per-tab
+// we remove the {side_panel default_path} in the manifest setting at root level (which will be available across all tabs), to manage side panels on per-tab basis
 // use the chrome.sidePanel.setOptions() API, you can control which pages/tabs the panel appears on.
 export {};
 
@@ -18,10 +22,10 @@ chrome.action.onClicked.addListener((tab) => {
 
 	try {
 		// chrome.sidePanel.setOptions() is a tab-specific API
-		// chrome.sidePanel internally centralizes & tracks the side panel state for all tabs as long as the browser is running (This happens at the browser level)
+		// chrome.sidePanel internally centralizes & tracks EACH side panel state in EACH of all tabs when the browser is running (This happens at the browser level)
 		// Maintains which tabs have panels enabled/disabled + Tracks panel configuration + Cleans up state when tabs are closed (at all time)
 		chrome.sidePanel.setOptions({
-			tabId: tab.id, // Enable side panel only for this tab only
+			tabId: tab.id, // Enable side panel only for this tab only by tab id
 			path: 'sidepanel.html', // Defines the content (path) that will be displayed in side panel
 			enabled: true, // Ensures the side panel is enabled for this tab
 		});
@@ -35,8 +39,10 @@ chrome.action.onClicked.addListener((tab) => {
 });
 
 // Initialize all tabs to have side panel disabled by default
+// onInstalled: listens for when the extension is installed, updated, or when Chrome is updated to a new version.
+// typically to perform setup or initalized related tasks like initializing storage, default starting setting.
 chrome.runtime.onInstalled.addListener(() => {
-	// This sets the default side panel state to disabled for all tabs for whole chrome app when you dont specific tabId
+	// This sets the default side panel state to disabled for ALL tabs for WHOLE chrome app (since you dont specific tabId property)
 	chrome.sidePanel.setOptions({
 		enabled: false,
 	});
@@ -80,9 +86,13 @@ async function cleanupTabPanelStoredLastGenData(tabId: number) {
 // Listen for messages from content scripts or side panels
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	if (message.action === 'incrementCredits') {
-		incrementCreditUsage().then((newCount) => {
-			sendResponse({ success: true, newCount });
-		});
+		incrementCreditUsage()
+			.then((newCount) => {
+				sendResponse({ success: true, newCount });
+			})
+			.catch((error) => {
+				sendResponse({ success: false, error });
+			});
 		return true; // Required for async response
 	}
 });
@@ -98,6 +108,6 @@ async function incrementCreditUsage(): Promise<number> {
 		return newCount;
 	} catch (error) {
 		console.error('Error incrementing credits:', error);
-		throw error;
+		throw error('Error incrementing your userd credits');
 	}
 }

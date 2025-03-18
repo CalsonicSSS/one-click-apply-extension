@@ -11,6 +11,11 @@ type UseFileManagementReturn = {
 	fileHandlingErrorMessage: string | null;
 };
 
+// This function will update both the local state and the chrome storage
+const updateCurrentFileStorage = async (newFileStorageState: FilesStorageState) => {
+	await chrome.storage.local.set({ fileStorage: newFileStorageState });
+};
+
 export const useFileManagement = (): UseFileManagementReturn => {
 	const [storedFilesObj, setStoredFilesObj] = useState<FilesStorageState>({
 		resume: null,
@@ -47,13 +52,13 @@ export const useFileManagement = (): UseFileManagementReturn => {
 			if (changes.fileStorage && !isLoading) {
 				const newValue = changes.fileStorage.newValue;
 				if (newValue) {
-					// Update local state to match storage
+					// Update local state to match storage (this is reflected in the sidepanel UI)
 					setStoredFilesObj(newValue);
 				}
 			}
 		};
 
-		// Add the listener
+		// Add the listener upon component mounts: this is to centrally react to any "updateCurrentFileStorage" function calls
 		chrome.storage.onChanged.addListener(syncFileStorageChange);
 
 		// Clean up the listener when the component unmounts
@@ -61,11 +66,6 @@ export const useFileManagement = (): UseFileManagementReturn => {
 			chrome.storage.onChanged.removeListener(syncFileStorageChange);
 		};
 	}, [isLoading]); // Only re-add the listener if isLoading changes
-
-	// This function will update both the local state and the chrome storage
-	const updateFileStorageState = async (newFileStorageState: FilesStorageState) => {
-		await chrome.storage.local.set({ fileStorage: newFileStorageState });
-	};
 
 	const uploadAndStoreFile = async (file: File, fileCategory: FileCategoryType): Promise<void> => {
 		setFileHandlingErrorMessage(null);
@@ -88,7 +88,7 @@ export const useFileManagement = (): UseFileManagementReturn => {
 			const newStoredFile = await createNewStoredFile(file, fileCategory);
 
 			if (fileCategory === 'resume') {
-				await updateFileStorageState({
+				await updateCurrentFileStorage({
 					...storedFilesObj,
 					resume: newStoredFile,
 				});
@@ -98,7 +98,7 @@ export const useFileManagement = (): UseFileManagementReturn => {
 					return;
 				}
 
-				await updateFileStorageState({
+				await updateCurrentFileStorage({
 					...storedFilesObj,
 					supportingDocs: [...storedFilesObj.supportingDocs, newStoredFile],
 				});
@@ -112,12 +112,12 @@ export const useFileManagement = (): UseFileManagementReturn => {
 	const removeFile = async (id: string, type: FileCategoryType): Promise<void> => {
 		try {
 			if (type === 'resume') {
-				await updateFileStorageState({
+				await updateCurrentFileStorage({
 					...storedFilesObj,
 					resume: null,
 				});
 			} else {
-				await updateFileStorageState({
+				await updateCurrentFileStorage({
 					...storedFilesObj,
 					supportingDocs: storedFilesObj.supportingDocs.filter((doc) => doc.id !== id),
 				});

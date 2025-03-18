@@ -23,9 +23,9 @@ export const evaluateJobPostingPageRequest = async (jobPostingPageContent: strin
 
 	// Handle non-2xx responses
 	if (!response.ok) {
+		// fastapi will return a error json object with a "detail" key
 		const error = await response.json();
 		// directly throw the error, which will be caught later by the tanstack mutation process later
-		// this detail directly comes from server side
 		throw new Error(error.detail);
 	}
 	// Parse and return the response

@@ -23,28 +23,28 @@ const SidePanelMain = () => {
 		lastSuggestionAndCreditUsedLoadingErrMessage,
 		lastSuggestion,
 		currentTabId,
-		generationProgress, // Add this to destructuring
+		generationProgress,
 		mutation: {
 			isError: isSuggestionGenerationError,
 			error: suggestionGenerationError,
 			isPending: isSuggestionGenerationPending,
-			data: suggestionGenerationData,
+			data: suggestionGeneratedData,
 			mutate: suggestionGenerationMutate,
 		},
 	} = useSuggestionGenerationProcess(storedFilesObj);
 
 	// Switch to suggestion tab when new results are available
 	useEffect(() => {
-		if (suggestionGenerationData && generationProgress?.stagePercentage === GenerationStage.COMPLETED) {
+		if (suggestionGeneratedData && generationProgress?.stagePercentage === GenerationStage.COMPLETED) {
 			// Add a small delay before switching to the suggestion tab
 			const timer = setTimeout(() => {
 				setActiveTab('suggestion');
-			}, 1000); // 1 second delay
+			}, 800);
 
 			// Clean up timer if component unmounts
 			return () => clearTimeout(timer);
 		}
-	}, [suggestionGenerationData, generationProgress]);
+	}, [suggestionGeneratedData, generationProgress]);
 
 	const handleGenerateSuggestions = () => {
 		suggestionGenerationMutate();
@@ -59,7 +59,7 @@ const SidePanelMain = () => {
 	}
 
 	// Determine what to show in the suggestion tab
-	const suggestionResults = suggestionGenerationData || lastSuggestion;
+	const suggestionResults = suggestionGeneratedData || lastSuggestion;
 
 	return (
 		<div className='flex h-screen w-full flex-col bg-white'>
