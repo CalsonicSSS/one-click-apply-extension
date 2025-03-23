@@ -1,10 +1,13 @@
-import { DEV_API_BASE_URL } from '@/constants/environments';
+import { DOMAIN_URL } from '@/constants/environments';
 import type { FilesStorageState } from '@/types/fileManagement';
 import type {
+	ApplicationQuestionAnswerResponse,
+	ApplicationQuestionGenerationRequestInputs,
 	CoverLetterGenerationRequestInputs,
 	CoverLetterGenerationResponse,
 	ExtractedJobPostingDetails,
 	JobPostingEvalResultResponse,
+	ResumeSuggestionGenerationRequestInputs,
 	ResumeSuggestionsResponse,
 } from '@/types/suggestionGeneration';
 
@@ -15,7 +18,7 @@ export const evaluateJobPostingPageRequest = async (jobPostingPageContent: strin
 	};
 
 	// all errors are handled on server side by fastapi
-	const response = await fetch(`${DEV_API_BASE_URL}/api/v1/generation/job-posting/evaluate`, {
+	const response = await fetch(`${DOMAIN_URL}/api/v1/generation/job-posting/evaluate`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(requestPayload),
@@ -33,6 +36,8 @@ export const evaluateJobPostingPageRequest = async (jobPostingPageContent: strin
 	return responseData as JobPostingEvalResultResponse;
 };
 
+// ----------------------------------------------------------------------------------------
+
 export const generateResumeSuggestionRequest = async ({
 	extractedJobPostingDetails,
 	storedFilesObj,
@@ -40,7 +45,7 @@ export const generateResumeSuggestionRequest = async ({
 	extractedJobPostingDetails: ExtractedJobPostingDetails;
 	storedFilesObj: FilesStorageState;
 }) => {
-	const requestPayload = {
+	const requestPayload: ResumeSuggestionGenerationRequestInputs = {
 		extracted_job_posting_details: extractedJobPostingDetails,
 		resume_doc: {
 			base64_content: storedFilesObj.resume!.base64Content,
@@ -49,7 +54,7 @@ export const generateResumeSuggestionRequest = async ({
 		},
 	};
 
-	const response = await fetch(`${DEV_API_BASE_URL}/api/v1/generation/resume/suggestions-generate`, {
+	const response = await fetch(`${DOMAIN_URL}/api/v1/generation/resume/suggestions-generate`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(requestPayload),
@@ -63,6 +68,8 @@ export const generateResumeSuggestionRequest = async ({
 	const responseData = await response.json();
 	return responseData as ResumeSuggestionsResponse;
 };
+
+// ----------------------------------------------------------------------------------------
 
 export const generateCoverLetterRequest = async ({
 	extractedJobPostingDetails,
@@ -88,7 +95,7 @@ export const generateCoverLetterRequest = async ({
 		}));
 	}
 
-	const response = await fetch(`${DEV_API_BASE_URL}/api/v1/generation/cover-letter/generate`, {
+	const response = await fetch(`${DOMAIN_URL}/api/v1/generation/cover-letter/generate`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(requestPayload),
@@ -101,4 +108,56 @@ export const generateCoverLetterRequest = async ({
 
 	const responseData = await response.json();
 	return responseData as CoverLetterGenerationResponse;
+};
+
+// ----------------------------------------------------------------------------------------
+
+export const generateApplicationQuestionAnswerRequest = async ({
+	question,
+	additionalRequirements,
+	extractedJobPostingDetails,
+	storedFilesObj,
+}: {
+	question: string;
+	additionalRequirements?: string;
+	extractedJobPostingDetails: ExtractedJobPostingDetails;
+	storedFilesObj: FilesStorageState;
+}) => {
+	const requestPayload: ApplicationQuestionGenerationRequestInputs = {
+		extracted_job_posting_details: extractedJobPostingDetails,
+		resume_doc: {
+			base64_content: storedFilesObj.resume!.base64Content,
+			file_type: storedFilesObj.resume!.fileType,
+			name: storedFilesObj.resume!.name,
+		},
+		question: question,
+	};
+
+	// Add additional requirements if provided
+	if (additionalRequirements) {
+		requestPayload.additional_requirements = additionalRequirements;
+	}
+
+	// Add supporting documents if available
+	if (storedFilesObj.supportingDocs.length > 0) {
+		requestPayload.supporting_docs = storedFilesObj.supportingDocs.map((doc) => ({
+			base64_content: doc.base64Content,
+			file_type: doc.fileType,
+			name: doc.name,
+		}));
+	}
+
+	const response = await fetch(`${DOMAIN_URL}/api/v1/generation/application-question/answer`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(requestPayload),
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.detail);
+	}
+
+	const responseData = await response.json();
+	return responseData as ApplicationQuestionAnswerResponse;
 };

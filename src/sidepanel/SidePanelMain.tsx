@@ -28,14 +28,14 @@ const SidePanelMain = () => {
 			isError: isSuggestionGenerationError,
 			error: suggestionGenerationError,
 			isPending: isSuggestionGenerationPending,
-			data: suggestionGeneratedData,
+			data: fullGeneratedSuggestionData,
 			mutate: suggestionGenerationMutate,
 		},
 	} = useSuggestionGenerationProcess(storedFilesObj);
 
 	// Switch to suggestion tab when new results are available
 	useEffect(() => {
-		if (suggestionGeneratedData && generationProgress?.stagePercentage === GenerationStage.COMPLETED) {
+		if (fullGeneratedSuggestionData && generationProgress?.stagePercentage === GenerationStage.COMPLETED) {
 			// Add a small delay before switching to the suggestion tab
 			const timer = setTimeout(() => {
 				setActiveTab('suggestion');
@@ -44,7 +44,7 @@ const SidePanelMain = () => {
 			// Clean up timer if component unmounts
 			return () => clearTimeout(timer);
 		}
-	}, [suggestionGeneratedData, generationProgress]);
+	}, [fullGeneratedSuggestionData, generationProgress]);
 
 	const handleGenerateSuggestions = () => {
 		suggestionGenerationMutate();
@@ -59,7 +59,7 @@ const SidePanelMain = () => {
 	}
 
 	// Determine what to show in the suggestion tab
-	const suggestionResults = suggestionGeneratedData || lastSuggestion;
+	const fullSuggestionResults = fullGeneratedSuggestionData || lastSuggestion;
 
 	return (
 		<div className='flex h-screen w-full flex-col bg-white'>
@@ -77,6 +77,7 @@ const SidePanelMain = () => {
 
 				<TabsContent value='profile' className='flex-1 overflow-auto py-4'>
 					<ProfileTab
+						currentTabId={currentTabId}
 						storedFilesObj={storedFilesObj}
 						fileHandlingErrorMessage={fileHandlingErrorMessage}
 						lastSuggestionAndCreditUsedLoadingErrMessage={lastSuggestionAndCreditUsedLoadingErrMessage}
@@ -93,7 +94,11 @@ const SidePanelMain = () => {
 				</TabsContent>
 
 				<TabsContent value='suggestion' className='flex-1 overflow-auto py-4'>
-					<SuggestionTab suggestionResults={suggestionResults} />
+					<SuggestionTab
+						fullSuggestionResults={fullSuggestionResults}
+						storedFilesObj={storedFilesObj}
+						currentTabId={currentTabId}
+					/>
 				</TabsContent>
 			</Tabs>
 		</div>

@@ -23,6 +23,11 @@ export type JobPostingEvalResultResponse = {
 
 // ----------------------------------------------------------------------------------------
 
+export type ResumeSuggestionGenerationRequestInputs = {
+	extracted_job_posting_details: ExtractedJobPostingDetails;
+	resume_doc: UploadedDocument;
+};
+
 export type ResumeSuggestion = {
 	where: string;
 	suggestion: string;
@@ -51,6 +56,29 @@ export type CoverLetterGenerationResponse = {
 
 // ----------------------------------------------------------------------------------------
 
+export type ApplicationQuestion = {
+	id: string;
+	question: string;
+	additionalRequirements?: string;
+	answer?: string;
+	createdAt: string;
+};
+
+export type ApplicationQuestionGenerationRequestInputs = {
+	extracted_job_posting_details: ExtractedJobPostingDetails;
+	resume_doc: UploadedDocument;
+	supporting_docs?: UploadedDocument[];
+	additional_requirements?: string;
+	question: string;
+};
+
+export type ApplicationQuestionAnswerResponse = {
+	question: string;
+	answer: string;
+};
+
+// ----------------------------------------------------------------------------------------
+
 export type FullSuggestionGeneration = {
 	job_title_name: string;
 	company_name: string;
@@ -58,4 +86,5 @@ export type FullSuggestionGeneration = {
 	cover_letter: string;
 	location: string;
 	resume_suggestions: ResumeSuggestion[];
+	extracted_job_posting_details: ExtractedJobPostingDetails;
 };

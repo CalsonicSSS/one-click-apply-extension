@@ -9,6 +9,7 @@ import { Trash2, Upload } from 'lucide-react';
 import { useRef, type ChangeEvent } from 'react';
 
 type ProfileTabProps = {
+	currentTabId: number | null;
 	storedFilesObj: FilesStorageState;
 	fileHandlingErrorMessage: string | null;
 	lastSuggestionAndCreditUsedLoadingErrMessage: string | null;
@@ -24,6 +25,7 @@ type ProfileTabProps = {
 };
 
 const ProfileTab = ({
+	currentTabId,
 	storedFilesObj,
 	fileHandlingErrorMessage,
 	lastSuggestionAndCreditUsedLoadingErrMessage,
@@ -56,6 +58,25 @@ const ProfileTab = ({
 
 	return (
 		<div className='flex flex-col space-y-6'>
+			{/* Error messages */}
+			{fileHandlingErrorMessage && (
+				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
+					{fileHandlingErrorMessage}
+				</div>
+			)}
+			{lastSuggestionAndCreditUsedLoadingErrMessage && (
+				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
+					{lastSuggestionAndCreditUsedLoadingErrMessage}
+				</div>
+			)}
+			{currentTabId ? (
+				<></>
+			) : (
+				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
+					{`Could not load current page tab ID`}
+				</div>
+			)}
+
 			{/* File upload buttons */}
 			<div className='grid w-full grid-cols-2 gap-x-3'>
 				<Button
@@ -108,17 +129,7 @@ const ProfileTab = ({
 					accept='.pdf,.docx,.txt'
 				/>
 			</div>
-			{/* Error messages */}
-			{fileHandlingErrorMessage && (
-				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
-					{fileHandlingErrorMessage}
-				</div>
-			)}
-			{lastSuggestionAndCreditUsedLoadingErrMessage && (
-				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
-					{lastSuggestionAndCreditUsedLoadingErrMessage}
-				</div>
-			)}
+
 			{/* Credit usage capacity bar */}
 			<div>
 				<div className='mb-2 flex justify-between text-xs text-gray-600'>

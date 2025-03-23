@@ -10,7 +10,7 @@ export type StoredFile = {
 	uploadedAt: string;
 };
 
-export interface FilesStorageState {
+export type FilesStorageState = {
 	resume: StoredFile | null;
 	supportingDocs: StoredFile[];
-}
+};

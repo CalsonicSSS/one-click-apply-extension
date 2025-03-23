@@ -59,18 +59,18 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 		getCurrentTabId();
 	}, []);
 
-	// Load tab-specific credits and last generation results
+	// Load tab-specific used credits count and last (latest) generation results
 	useEffect(() => {
 		const loadData = async () => {
 			if (!currentTabId) return;
 
 			try {
-				const result = await chrome.storage.local.get(['usedSuggestionCreditsCount', 'tabSuggestions']);
+				const storageResult = await chrome.storage.local.get(['usedSuggestionCreditsCount', 'tabSuggestions']);
 
-				setUsedSuggestionCredits(result.usedSuggestionCreditsCount || 0);
+				setUsedSuggestionCredits(storageResult.usedSuggestionCreditsCount || 0);
 
-				// Get tab-specific suggestion if available
-				const tabSuggestions = result.tabSuggestions || {};
+				// Get existing tab-specific suggestion if available
+				const tabSuggestions = storageResult.tabSuggestions || {};
 				if (tabSuggestions[currentTabId]) {
 					setLastSuggestion(tabSuggestions[currentTabId]);
 				} else {
@@ -127,8 +127,10 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 				message: 'Analyzing job posting content...',
 			});
 
-			const pageExtractedResponse = await extractPageContentFromActiveTab();
-			const jobPostingEvaluationResult = await evaluateJobPostingPageRequest(pageExtractedResponse.pageContent);
+			const pageExtractedContent = await extractPageContentFromActiveTab();
+			const jobPostingEvaluationResponseResult = await evaluateJobPostingPageRequest(
+				pageExtractedContent.pageContent,
+			);
 
 			// STEP 2: Generate resume suggestions
 			setGenerationProgress({
@@ -136,8 +138,8 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 				message: 'Generating tailored resume suggestions...',
 			});
 
-			const resumeSuggestionsResult = await generateResumeSuggestionRequest({
-				extractedJobPostingDetails: jobPostingEvaluationResult.extracted_job_posting_details,
+			const resumeSuggestionsResponseResult = await generateResumeSuggestionRequest({
+				extractedJobPostingDetails: jobPostingEvaluationResponseResult.extracted_job_posting_details,
 				storedFilesObj,
 			});
 
@@ -148,7 +150,7 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 			});
 
 			const coverLetterResponseResult = await generateCoverLetterRequest({
-				extractedJobPostingDetails: jobPostingEvaluationResult.extracted_job_posting_details,
+				extractedJobPostingDetails: jobPostingEvaluationResponseResult.extracted_job_posting_details,
 				storedFilesObj,
 			});
 
@@ -158,27 +160,28 @@ export const useSuggestionGenerationProcess = (storedFilesObj: FilesStorageState
 				message: 'Generation process complete!',
 			});
 
-			// Combine results into a single object
+			// Combine coverLetterResponseResult and resumeSuggestionsResponseResult into a single object
+			// we will also "extracted_job_posting_details" from jobPostingEvaluationResponseResult to save them all together for now for convenience
+			// this "extracted_job_posting_details" for application questions later
 			const newSuggestionCombinedResults: FullSuggestionGeneration = {
 				job_title_name: coverLetterResponseResult.job_title_name,
 				company_name: coverLetterResponseResult.company_name,
 				applicant_name: coverLetterResponseResult.applicant_name,
 				cover_letter: coverLetterResponseResult.cover_letter,
 				location: coverLetterResponseResult.location,
-				resume_suggestions: resumeSuggestionsResult.resume_suggestions,
+				resume_suggestions: resumeSuggestionsResponseResult.resume_suggestions,
+				extracted_job_posting_details: jobPostingEvaluationResponseResult.extracted_job_posting_details,
 			};
 
-			// Increment credit usage via background script to prevent race conditions
-			const response = await chrome.runtime.sendMessage({ action: 'incrementCredits' });
-			// if (response && response.success) {
-			// 	setUsedSuggestionCredits(response.newCount);
-			// }
+			// Increment credit usage via background script to prevent race conditions (same user on different tabs of job postings share the same credit count)
+			// This is to ensure that the user's credit count is updated in the background script, which is the source of truth for the credit count
+			await chrome.runtime.sendMessage({ action: 'incrementCredits' });
 
-			// Store / update existing tab-specific suggestion
-			const result = await chrome.storage.local.get('tabSuggestions');
-			const currentTabSuggestions = result.tabSuggestions || {};
-			currentTabSuggestions[currentTabId] = newSuggestionCombinedResults;
-			await chrome.storage.local.set({ currentTabSuggestions });
+			// Store or update existing tab-specific suggestion
+			const storageResult = await chrome.storage.local.get('tabSuggestions');
+			const tabSuggestions = storageResult.tabSuggestions || {};
+			tabSuggestions[currentTabId] = newSuggestionCombinedResults;
+			await chrome.storage.local.set({ tabSuggestions });
 
 			return newSuggestionCombinedResults;
 		} catch (error) {

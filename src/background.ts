@@ -12,6 +12,7 @@
 // use the chrome.sidePanel.setOptions() API, you can control which pages/tabs the panel appears on.
 export {};
 
+// we will keep track of which tabs have the side panel enabled (later is used for the purpose of data-cleanup when specific tabs are closed on the chrome browser)
 const activePanelTabs: Set<number> = new Set();
 
 // chrome.action refers to the extension's browser action (toolbar icon) | onClicked is an event triggered when the user clicks the extension icon.
@@ -62,21 +63,30 @@ chrome.tabs.onCreated.addListener((tab) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
 	// If this tab had an active panel, clean up its data
 	if (activePanelTabs.has(tabId)) {
-		cleanupTabPanelStoredLastGenData(tabId);
+		cleanupTabSpecificStoredGenData(tabId);
 		activePanelTabs.delete(tabId);
 	}
 });
 
-async function cleanupTabPanelStoredLastGenData(tabId: number) {
+// this is to clean up tabSuggestions / tabApplicationQuestions data stored in current specific tab
+// fileStorage and used creadit count are user specific and should persist even if the tab is closed (the CRUD are handled directly by user interaction)
+async function cleanupTabSpecificStoredGenData(tabId: number) {
 	try {
-		// Get current tab suggestions storage
-		const result = await chrome.storage.local.get('tabSuggestions');
-		const tabSuggestions = result.tabSuggestions || {};
+		// {tabSuggestions: tabId: {...}, tabId: {...}, }
+		const storageResult = await chrome.storage.local.get(['tabSuggestions', 'tabApplicationQuestions']);
 
-		// Remove this tab's data if it exists
+		// Handle tabSuggestions cleanup
+		const tabSuggestions = storageResult.tabSuggestions || {};
 		if (tabSuggestions[tabId]) {
 			delete tabSuggestions[tabId];
 			await chrome.storage.local.set({ tabSuggestions });
+		}
+
+		// Handle tabApplicationQuestions cleanup
+		const tabApplicationQuestions = storageResult.tabApplicationQuestions || {};
+		if (tabApplicationQuestions[tabId]) {
+			delete tabApplicationQuestions[tabId];
+			await chrome.storage.local.set({ tabApplicationQuestions });
 		}
 	} catch (error) {
 		console.error('Error cleaning up tab data:', error);
