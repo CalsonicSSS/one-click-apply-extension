@@ -1,105 +1,157 @@
-# Wise Craft - AI-Powered Job Search Chrome Extension
+# Wise Craft Chrome Extension
 
-![Wise Craft Logo](https://your-logo-url.com/logo.png)
+A Chrome extension that helps job seekers tailor their resumes and generate cover letters based on job postings. Built with TypeScript, React, Shadcn/UI, and Tailwind CSS.
 
-## 🚀 Overview
+![Wise Craft Logo](path/to/logo.png)
 
-Wise Craft is a powerful Chrome extension that streamlines your job search by generating tailored resumes and cover letters directly on job sites. With one click, Wise Craft analyzes job descriptions and provides AI-driven resume suggestions to improve your chances of landing an interview.
+## Features
 
-## 🎯 Features
+-   🔍 **Job Posting Analysis**: Automatically extracts key information from any job posting
+-   📝 **Resume Tailoring**: Provides targeted suggestions to customize your resume for each job
+-   ✉️ **Cover Letter Generation**: Creates personalized cover letters based on your resume and the job description
+-   💬 **Application Question Answers**: Generates responses for common application questions
+-   📂 **Document Management**: Upload and manage your resume and supporting documents
+-   💾 **Tab-specific Storage**: Keeps your data organized by tab/job posting
+-   📱 **Responsive Side Panel**: Seamless integration with your browsing experience
 
--   📝 **AI Resume Optimization**: Get personalized resume suggestions based on job descriptions.
--   📄 **Instant Cover Letter Generation**: AI-generated cover letters tailored to each job posting.
--   📂 **File Management**: Upload and store your resume and supporting documents securely.
--   🌐 **Works on Any Job Site**: Supports all job boards and company career pages.
--   🎯 **Easy Side Panel Access**: Seamless integration with Chrome’s side panel.
+## Tech Stack
 
-## 🛠️ Tech Stack
+-   **Framework**: [Plasmo](https://www.plasmo.com/) - Browser extension framework
+-   **Language**: TypeScript
+-   **UI Library**: React
+-   **Component Library**: [Shadcn/UI](https://ui.shadcn.com/)
+-   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+-   **Package Manager**: [pnpm](https://pnpm.io/)
+-   **State Management**: [TanStack Query](https://tanstack.com/query/latest)
+-   **Document Generation**: jsPDF, docx
 
--   **Framework**: React, TypeScript
--   **UI Library**: TailwindCSS, Radix UI
--   **State Management**: React Query
--   **Storage**: Chrome Local Storage
--   **Build Tool**: Plasmo Framework
-
-## 📦 Installation
-
-### 1️⃣ Clone the Repository
-
-```sh
-git clone https://github.com/your-username/wise-craft.git
-cd wise-craft
-```
-
-### 2️⃣ Install Dependencies
-
-```sh
-npm install
-```
-
-### 3️⃣ Start Development Server
-
-```sh
-npm run dev
-```
-
-### 4️⃣ Build & Package the Extension
-
-```sh
-npm run build
-npm run package
-```
-
-## 🖥️ File Structure
+## Project Structure
 
 ```
-wise-craft/
-│── src/
-│   ├── background.ts       # Manages Chrome extension events
-│   ├── contents/           # Content scripts for job page extraction
-│   ├── sidepanel/          # UI for the extension side panel
-│   ├── hooks/              # Custom React hooks
-│   ├── utils/              # Helper functions
-│   ├── types/              # TypeScript type definitions
-│   ├── constants/          # Constants (e.g., API URLs, file limits)
-│── manifest.json          # Chrome extension manifest
-│── package.json           # Project metadata and dependencies
-│── tsconfig.json          # TypeScript configuration
-│── tailwind.config.js     # TailwindCSS configuration
-│── README.md              # This file!
+src/
+├── api/                 # API client functions
+├── components/          # Reusable UI components
+│   ├── SuggestionResults/  # Components for displaying generated content
+│   └── ui/              # Shadcn UI components
+├── constants/           # Application constants
+├── contents/            # Content scripts
+├── hooks/               # Custom React hooks
+├── lib/                 # Utility libraries
+├── sidepanel/           # Side panel UI
+│   └── tabs/            # Tab components for the side panel
+├── types/               # TypeScript type definitions
+└── utils/               # Helper functions
 ```
 
-## ⚡ Usage
+## Core Components
 
-1. **Install the extension** in Chrome Developer Mode by loading the `/dist` folder.
-2. **Navigate to a job posting** on any job site.
-3. **Click the Wise Craft icon** in the Chrome toolbar.
-4. **Upload your resume** and generate AI-powered suggestions instantly.
+### Background Script
 
-## 🔧 Development Notes
+The `background.ts` file manages the extension's lifecycle and handles the side panel on a per-tab basis. It tracks which tabs have the side panel enabled and cleans up tab-specific data when tabs are closed.
 
--   The extension leverages `chrome.sidePanel.setOptions()` to control panel visibility per tab.
--   The `content script` extracts job descriptions by stripping unnecessary HTML elements.
--   The `background script` manages Chrome API interactions.
+### Side Panel
 
-## 🛠️ Contributing
+The side panel is the main interface of the extension, consisting of two main tabs:
 
-We welcome contributions! To contribute:
+1. **Profile Tab**: For uploading and managing documents, and initiating the generation process
+2. **Suggestion Tab**: For viewing and using the generated suggestions, with sub-tabs for:
+    - Resume suggestions
+    - Cover letter
+    - Application questions
 
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature-branch`).
-3. Make your changes and commit (`git commit -m 'Add feature'`).
-4. Push to your branch (`git push origin feature-branch`).
-5. Open a Pull Request.
+### API Integration
 
-## 📜 License
+The application communicates with a backend API for content generation, with endpoints for:
+
+-   Job posting evaluation
+-   Resume suggestion generation
+-   Cover letter generation
+-   Application question answering
+
+### Document Management
+
+Users can upload and manage:
+
+-   Resume (required)
+-   Supporting documents (optional, up to 4)
+
+Files are stored as base64-encoded strings in Chrome's local storage.
+
+### Content Extraction
+
+The `jobPageExtractor.ts` content script extracts relevant content from job posting pages for analysis.
+
+## Installation for Development
+
+1. Clone the repository:
+
+    ```bash
+    git clone https://github.com/your-username/wise-craft.git
+    cd wise-craft
+    ```
+
+2. Install dependencies:
+
+    ```bash
+    pnpm install
+    ```
+
+3. Build the extension:
+
+    ```bash
+    pnpm dev
+    ```
+
+4. Load the extension in Chrome:
+    - Go to `chrome://extensions/`
+    - Enable "Developer mode"
+    - Click "Load unpacked"
+    - Select the `build/chrome-mv3-dev` directory
+
+## Backend Integration
+
+This extension requires a backend API with the following endpoints:
+
+-   `/api/v1/generation/job-posting/evaluate`
+-   `/api/v1/generation/resume/suggestions-generate`
+-   `/api/v1/generation/cover-letter/generate`
+-   `/api/v1/generation/application-question/answer`
+
+Configure the API domain in `src/constants/environments.ts`.
+
+## Storage Architecture
+
+The extension uses Chrome's local storage with the following structure:
+
+-   `fileStorage`: User's documents (resume and supporting files)
+-   `usedSuggestionCreditsCount`: Tracks the number of suggestions generated
+-   `tabSuggestions`: Stores generated content per tab
+-   `tabApplicationQuestions`: Stores application question answers per tab
+
+## Credit System
+
+The extension implements a credit system for tracking usage:
+
+-   Free tier: 15 credits
+-   Tier one: 40 credits
+
+Each generation consumes one credit.
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add some amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a pull request
+
+## License
 
 This project is licensed under the [MIT License](LICENSE).
 
-## 📩 Contact
+## Acknowledgements
 
-For questions, reach out to **Pillar.ai** at [calson.developer@gmail.com](mailto:calson.developer@gmail.com).
-
----
-
-🚀 **Enhance your job search with AI-powered resume suggestions!**
+-   [Plasmo Framework](https://www.plasmo.com/)
+-   [Shadcn/UI](https://ui.shadcn.com/)
+-   [Tailwind CSS](https://tailwindcss.com/)
+-   [TanStack Query](https://tanstack.com/query/latest)
