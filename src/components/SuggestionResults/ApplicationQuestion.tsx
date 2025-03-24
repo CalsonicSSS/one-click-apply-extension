@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { FilesStorageState } from '@/types/fileManagement';
 import type { ApplicationQuestion, ExtractedJobPostingDetails } from '@/types/suggestionGeneration';
-import { formatDate } from '@/utils/helpers';
+import { formatDate } from '@/utils/coverletterFormatDownload';
 import { useMutation } from '@tanstack/react-query';
 import { CheckCircle, Copy, HelpCircle, Trash2 } from 'lucide-react';
 import { useState } from 'react';

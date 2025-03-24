@@ -1,8 +1,8 @@
-# Wise Craft Chrome Extension
+# Ninja Craft Chrome Extension
 
 A Chrome extension that helps job seekers tailor their resumes and generate cover letters based on job postings. Built with TypeScript, React, Shadcn/UI, and Tailwind CSS.
 
-![Wise Craft Logo](path/to/logo.png)
+![Ninja Craft Logo](path/to/logo.png)
 
 ## Features
 
@@ -86,8 +86,8 @@ The `jobPageExtractor.ts` content script extracts relevant content from job post
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/your-username/wise-craft.git
-    cd wise-craft
+    git clone https://github.com/your-username/Ninja-craft.git
+    cd Ninja-craft
     ```
 
 2. Install dependencies:

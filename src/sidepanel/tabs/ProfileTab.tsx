@@ -57,7 +57,7 @@ const ProfileTab = ({
 		isSuggestionGenerationPending || generationProgress?.stagePercentage === GenerationStage.COMPLETED;
 
 	return (
-		<div className='flex flex-col space-y-6'>
+		<div className='flex h-full flex-col space-y-6'>
 			{/* Error messages */}
 			{fileHandlingErrorMessage && (
 				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
@@ -76,7 +76,6 @@ const ProfileTab = ({
 					{`Could not load current page tab ID`}
 				</div>
 			)}
-
 			{/* File upload buttons */}
 			<div className='grid w-full grid-cols-2 gap-x-3'>
 				<Button
@@ -129,7 +128,6 @@ const ProfileTab = ({
 					accept='.pdf,.docx,.txt'
 				/>
 			</div>
-
 			{/* Credit usage capacity bar */}
 			<div>
 				<div className='mb-2 flex justify-between text-xs text-gray-600'>
@@ -221,6 +219,23 @@ const ProfileTab = ({
 			</Button>
 			{/* Add progress bar below the button */}
 			{showProgressBar && <GenerationProgressBar progress={generationProgress} className='mt-2' />}
+
+			{/* This will take up remaining space */}
+			<div className='flex-grow'></div>
+
+			{/* Your Feedback & Rant Button at the very bottom */}
+			<Button
+				variant='default'
+				className='h-12 w-full hover:opacity-90'
+				onClick={() =>
+					window.open(
+						'https://docs.google.com/forms/d/e/1FAIpQLSe_-b3fbDMQbN4UB68wKA-VlRsle28grwBbG3CgxyqO_Uiylg/viewform?usp=header',
+						'_blank',
+					)
+				}
+			>
+				{'🥶 Your Feedback & Rant 🥶'}
+			</Button>
 		</div>
 	);
 };

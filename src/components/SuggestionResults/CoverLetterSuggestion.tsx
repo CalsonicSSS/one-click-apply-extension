@@ -4,7 +4,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { handleDownloadDocx, handleDownloadPdf } from '@/utils/helpers';
+import { handleDownloadDocx, handleDownloadPdf } from '@/utils/coverletterFormatDownload';
 import { CheckCircle, Copy, Download, FileDown } from 'lucide-react';
 import { useState } from 'react';
 

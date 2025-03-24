@@ -65,8 +65,9 @@ const SidePanelMain = () => {
 		<div className='flex h-screen w-full flex-col bg-white'>
 			{/* Header */}
 			<div className='p-4'>
-				<h1 className='text-2xl font-bold text-gray-900'>Wise Craft</h1>
-				<p className='text-sm text-gray-500'>Your tailored resume & CV, just one click away</p>
+				{/* current changing UI title name to "Ninja craft" */}
+				<h1 className='text-2xl font-bold text-gray-900'>Ninja Craft</h1>
+				<p className='text-sm text-gray-500'>Get tailored resume & CV, just one click away</p>
 			</div>
 
 			<Tabs value={activeTab} onValueChange={setActiveTab} className='flex flex-1 flex-col overflow-hidden px-4'>

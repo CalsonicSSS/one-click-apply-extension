@@ -1,6 +1,6 @@
 import { ALLOWED_FILE_TYPES, MAX_ALLOWED_TOTAL_FILE_SIZE } from '@/constants/fileManagement';
 import type { FileCategoryType, StoredFile } from '@/types/fileManagement';
-import { formatDate } from './helpers';
+import { formatDate } from './coverletterFormatDownload';
 
 export const convertFileToBase64String = (file: File): Promise<string> => {
 	return new Promise((resolve, reject) => {
