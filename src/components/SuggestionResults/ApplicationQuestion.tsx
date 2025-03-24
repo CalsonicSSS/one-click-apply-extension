@@ -71,7 +71,7 @@ const ApplicationQuestions = ({
 		<div className='space-y-6'>
 			{/* Question input form */}
 			<div className='space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4'>
-				<h3 className='text-sm font-medium'>Generate Answer for Application Question</h3>
+				<h3 className='text-sm font-medium'>Generate Answer for Application Input Questions</h3>
 
 				<div className='space-y-2'>
 					<div className='flex items-center justify-between'>

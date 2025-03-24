@@ -48,7 +48,7 @@ const SuggestionTab = ({ fullSuggestionResults, storedFilesObj, currentTabId }: 
 				<TabsList className='mb-4 grid w-full grid-cols-3 text-sm'>
 					<TabsTrigger value='resume'>Resume</TabsTrigger>
 					<TabsTrigger value='coverLetter'>Cover Letter</TabsTrigger>
-					<TabsTrigger value='applicationQuestions'>Input Questions</TabsTrigger>
+					<TabsTrigger value='applicationQuestions'>Questions</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value='resume' className='flex-1 overflow-auto'>

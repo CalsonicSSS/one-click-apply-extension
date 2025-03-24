@@ -226,7 +226,7 @@ const ProfileTab = ({
 			{/* Your Feedback & Rant Button at the very bottom */}
 			<Button
 				variant='default'
-				className='h-12 w-full hover:opacity-90'
+				className='h-12 w-full bg-[#6D28D9] hover:opacity-90'
 				onClick={() =>
 					window.open(
 						'https://docs.google.com/forms/d/e/1FAIpQLSe_-b3fbDMQbN4UB68wKA-VlRsle28grwBbG3CgxyqO_Uiylg/viewform?usp=header',
@@ -234,7 +234,7 @@ const ProfileTab = ({
 					)
 				}
 			>
-				{'🥶 Your Feedback & Rant 🥶'}
+				{' Your Feedback & Rant 🥶💥☢️'}
 			</Button>
 		</div>
 	);
