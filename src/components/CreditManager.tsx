@@ -75,8 +75,7 @@ export function CreditManager() {
       setLoading(false)
     }
   }
-  console.log("the credits are")
-  console.log(credits)
+
   return (
     <Card className="p-4 mb-4">
       <div className="flex flex-col space-y-4">
