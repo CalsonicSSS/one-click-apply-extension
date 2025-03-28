@@ -16,6 +16,11 @@ export type ExtractedJobPostingDetails = {
 	other_additional_details: string;
 };
 
+export type JobPostingEvalRequestInputs = {
+	jobPostingPageContent: string;
+	browser_id: string;
+};
+
 export type JobPostingEvalResultResponse = {
 	is_job_posting: boolean;
 	extracted_job_posting_details: ExtractedJobPostingDetails;
@@ -72,6 +77,7 @@ export type ApplicationQuestionGenerationRequestInputs = {
 	supporting_docs?: UploadedDocument[];
 	additional_requirements?: string;
 	question: string;
+	browser_id: string;
 };
 
 export type ApplicationQuestionAnswerResponse = {

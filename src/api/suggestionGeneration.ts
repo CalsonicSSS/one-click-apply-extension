@@ -6,16 +6,17 @@ import type {
 	CoverLetterGenerationRequestInputs,
 	CoverLetterGenerationResponse,
 	ExtractedJobPostingDetails,
+	JobPostingEvalRequestInputs,
 	JobPostingEvalResultResponse,
 	ResumeSuggestionGenerationRequestInputs,
 	ResumeSuggestionsResponse,
 } from '@/types/suggestionGeneration';
 
-export const evaluateJobPostingPageRequest = async (jobPostingPageContent: string, browserId: string) => {
+export const evaluateJobPostingPageRequest = async (inputs: JobPostingEvalRequestInputs) => {
 	// create post request payload
 	const requestPayload = {
-		raw_job_html_content: jobPostingPageContent,
-		browser_id: browserId,
+		raw_job_html_content: inputs.jobPostingPageContent,
+		browser_id: inputs.browser_id,
 	};
 
 	// all errors are handled on server side by fastapi
@@ -140,6 +141,7 @@ export const generateApplicationQuestionAnswerRequest = async ({
 			name: storedFilesObj.resume!.name,
 		},
 		question: question,
+		browser_id: browserId,
 	};
 
 	// Add additional requirements if provided
@@ -153,7 +155,6 @@ export const generateApplicationQuestionAnswerRequest = async ({
 			base64_content: doc.base64Content,
 			file_type: doc.fileType,
 			name: doc.name,
-			browser_id: browserId,
 		}));
 	}
 

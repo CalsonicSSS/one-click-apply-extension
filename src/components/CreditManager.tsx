@@ -3,9 +3,9 @@ import { Button } from "./ui/button"
 import { Card } from "@/components/ui/card"
 import { useStorage } from "@plasmohq/storage/hook"
 import { generateBrowserId } from "@/utils/browser"
-import { DOMAIN_URL } from "@/constants/environments"
+import { createCheckoutSession, getUserCredits } from "@/api/payment"
 
-interface CreditPackage {
+type CreditPackage = {
   credits: number
   price: number
 }
@@ -33,17 +33,8 @@ export function CreditManager() {
     }
     try {
 
-      const response = await fetch(
-        `${DOMAIN_URL}/api/v1/users/get-or-create?browser_id=${browserId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-
-          },
-        }
-      )
-      const data = await response.json()
-      setCredits(data.credits)
+      const credits = await getUserCredits(browserId)
+      setCredits(credits)
     } catch (error) {
       console.error("Error fetching credits:", error)
     }
@@ -52,23 +43,10 @@ export function CreditManager() {
   const handlePurchase = async (package_id: string) => {
     try {
       setLoading(true)
-      const response = await fetch(
-        `${DOMAIN_URL}/api/v1/payments/create-session`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            browser_id: browserId,
-            package: package_id
-          })
-        }
-      )
-      const data = await response.json()
+      const url = await createCheckoutSession(browserId, package_id)
       
       // Open Stripe checkout in a new window
-      window.open(data.url, "_blank")
+      window.open(url, "_blank")
     } catch (error) {
       console.error("Error creating checkout session:", error)
     } finally {
