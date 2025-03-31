@@ -12,10 +12,8 @@ const SidePanelMain = () => {
 	const { storedFilesObj, uploadFile, removeFile, fileHandlingErrorMessage } = useFileManagement();
 
 	const {
-		usedCredits,
 		credits,
 		sugguestionHandlingErrorMessage,
-		suggestionCreditUsagePercentage,
 		tabSpecificLatestFullSuggestion,
 		generationProgress,
 		browserId,
@@ -64,8 +62,6 @@ const SidePanelMain = () => {
 						storedFilesObj={storedFilesObj}
 						fileHandlingErrorMessage={fileHandlingErrorMessage}
 						sugguestionHandlingErrorMessage={sugguestionHandlingErrorMessage}
-						suggestionCreditUsagePercentage={suggestionCreditUsagePercentage}
-						usedSuggestionCredits={usedCredits}
 						uploadFile={uploadFile}
 						removeFile={removeFile}
 						isSuggestionGenerationError={isSuggestionGenerationError}

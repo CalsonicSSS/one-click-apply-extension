@@ -28,8 +28,11 @@ export function CreditManager({ browserId, credits }: { browserId: string | null
 		<Card className='mb-4 p-4'>
 			<div className='flex flex-col space-y-4'>
 				<div className='flex items-center justify-between'>
-					<h3 className='text-sm font-semibold'>Purchase Credits</h3>
-					<span className='text-sm font-bold'>{credits}</span>
+					<div className='flex items-center'>
+						<h3 className='mr-2 text-sm font-semibold'>Credits Left:</h3>
+						<span className='text-sm font-bold text-emerald-600'>{credits}</span>
+					</div>
+					<span className='ml-2 text-xs font-medium'>Purchase more below 🚀</span>
 				</div>
 
 				<div className='grid grid-cols-2 gap-4'>

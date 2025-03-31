@@ -3,7 +3,6 @@ import FileTypeIcon from '@/components/FileTypeIcon';
 import GenerationProgressBar from '@/components/GenerationProgressBar';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { FREE_TIER_USER_CREDIT_COUNT } from '@/constants/environments';
 import type { FilesStorageState } from '@/types/fileManagement';
 import { GenerationStage, type GenerationProgress } from '@/types/progressTracking';
 import { Trash2, Upload } from 'lucide-react';
@@ -13,8 +12,6 @@ type ProfileTabProps = {
 	storedFilesObj: FilesStorageState;
 	fileHandlingErrorMessage: string | null;
 	sugguestionHandlingErrorMessage: string | null;
-	suggestionCreditUsagePercentage: number;
-	usedSuggestionCredits: number;
 	uploadFile: (file: File, docCategoryType: 'resume' | 'supporting') => Promise<void>;
 	removeFile: (id: string, docCategoryType: 'resume' | 'supporting') => Promise<void>;
 	isSuggestionGenerationError: boolean;
@@ -30,8 +27,6 @@ const ProfileTab = ({
 	storedFilesObj,
 	fileHandlingErrorMessage,
 	sugguestionHandlingErrorMessage,
-	suggestionCreditUsagePercentage,
-	usedSuggestionCredits,
 	uploadFile,
 	removeFile,
 	isSuggestionGenerationError,
@@ -123,21 +118,6 @@ const ProfileTab = ({
 					onChange={(e) => handleFileChange(e, 'supporting')}
 					accept='.pdf,.docx,.txt'
 				/>
-			</div>
-			{/* Credit usage capacity bar */}
-			<div>
-				<div className='mb-2 flex justify-between text-xs text-gray-600'>
-					<span>{suggestionCreditUsagePercentage}% used</span>
-					<span>
-						{usedSuggestionCredits} / {FREE_TIER_USER_CREDIT_COUNT}
-					</span>
-				</div>
-				<div className='h-1.5 w-full overflow-hidden rounded-full bg-gray-200'>
-					<div
-						className='h-full rounded-full bg-black'
-						style={{ width: `${suggestionCreditUsagePercentage}%` }}
-					></div>
-				</div>
 			</div>
 			{/* Files Section */}
 			<div className='space-y-2'>

@@ -4,12 +4,10 @@ import {
 	generateResumeSuggestionRequest,
 } from '@/api/suggestionGeneration';
 import { getUserCredits } from '@/api/user';
-import { FREE_TIER_USER_CREDIT_COUNT } from '@/constants/environments';
 import type { FilesStorageState } from '@/types/fileManagement';
 import { GenerationStage, type GenerationProgress } from '@/types/progressTracking';
 import type { FullSuggestionGeneration } from '@/types/suggestionGeneration';
 import { generateBrowserId } from '@/utils/browser';
-import { useStorage } from '@plasmohq/storage/hook';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
@@ -50,28 +48,42 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 	>(null);
 	const [currentTabId, setCurrentTabId] = useState<number | null>(null);
 	const [credits, setCredits] = useState<number | null>(null);
-	const [usedCredits, setUsedCredits] = useState<number | null>(null);
 	const [sugguestionHandlingErrorMessage, setSugguestionHandlingErrorMessage] = useState<string>('');
 	const [generationProgress, setGenerationProgress] = useState<GenerationProgress | null>(null);
-	const [browserId, setBrowserId] = useStorage('browserId');
+	const [browserId, setBrowserId] = useState<string | null>(null);
 
 	const fetchAndSetUserCredits = async () => {
 		if (!browserId) return;
 		try {
 			const currentCredits = await getUserCredits(browserId);
 			setCredits(currentCredits);
-			setUsedCredits(FREE_TIER_USER_CREDIT_COUNT - currentCredits);
 		} catch (error) {
 			console.error('Error fetching user credits:', error);
 			setSugguestionHandlingErrorMessage('Failed to fetch your credits');
 		}
 	};
-	// get user current credit count and then calculate the used credit
+
+	// get current browserID upon initial
 	useEffect(() => {
-		if (!browserId) {
-			setBrowserId(generateBrowserId());
+		const getBrowserId = async () => {
+			const browserIdResultPair = await chrome.storage.local.get('browserId');
+			const browserId = browserIdResultPair.browserId;
+			if (!browserId) {
+				const browserId = generateBrowserId();
+				await chrome.storage.local.set({ browserId });
+				setBrowserId(browserId);
+			} else {
+				setBrowserId(browserId);
+			}
+		};
+		getBrowserId();
+	}, []);
+
+	// fetch user credit upon initial
+	useEffect(() => {
+		if (browserId) {
+			fetchAndSetUserCredits();
 		}
-		fetchAndSetUserCredits();
 	}, [browserId]);
 
 	// Get the current tab ID
@@ -204,21 +216,14 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 		}
 	};
 
-	const suggestionCreditUsagePercentage = Math.min(
-		100,
-		Math.round((usedCredits / FREE_TIER_USER_CREDIT_COUNT) * 100),
-	);
-
 	const mutation = useMutation({
 		mutationFn: handleGenerateSuggestionsProcess,
 	});
 
 	return {
 		mutation,
-		usedCredits,
 		credits,
 		sugguestionHandlingErrorMessage,
-		suggestionCreditUsagePercentage,
 		tabSpecificLatestFullSuggestion,
 		generationProgress,
 		browserId,

@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils'; // Assuming you have this utility from shadcn/ui
+import { cn } from '@/lib/utils';
 import type { GenerationProgress } from '@/types/progressTracking';
 
 interface GenerationProgressBarProps {
