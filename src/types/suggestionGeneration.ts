@@ -17,7 +17,7 @@ export type ExtractedJobPostingDetails = {
 };
 
 export type JobPostingEvalRequestInputs = {
-	jobPostingPageContent: string;
+	raw_job_html_content: string;
 	browser_id: string;
 };
 
@@ -31,7 +31,7 @@ export type JobPostingEvalResultResponse = {
 export type ResumeSuggestionGenerationRequestInputs = {
 	extracted_job_posting_details: ExtractedJobPostingDetails;
 	resume_doc: UploadedDocument;
-	browser_id: string;
+	// browser_id: string;
 };
 
 export type ResumeSuggestion = {
@@ -50,7 +50,7 @@ export type CoverLetterGenerationRequestInputs = {
 	extracted_job_posting_details: ExtractedJobPostingDetails;
 	resume_doc: UploadedDocument;
 	supporting_docs?: UploadedDocument[];
-	browser_id: string;
+	// browser_id: string;
 };
 
 export type CoverLetterGenerationResponse = {
@@ -63,11 +63,11 @@ export type CoverLetterGenerationResponse = {
 
 // ----------------------------------------------------------------------------------------
 
-export type ApplicationQuestion = {
+export type AnsweredQuestion = {
 	id: string;
 	question: string;
 	additionalRequirements?: string;
-	answer?: string;
+	answer: string;
 	createdAt: string;
 };
 
@@ -77,7 +77,7 @@ export type ApplicationQuestionGenerationRequestInputs = {
 	supporting_docs?: UploadedDocument[];
 	additional_requirements?: string;
 	question: string;
-	browser_id: string;
+	// browser_id: string;
 };
 
 export type ApplicationQuestionAnswerResponse = {

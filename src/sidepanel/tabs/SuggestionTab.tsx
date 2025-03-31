@@ -2,7 +2,6 @@ import ApplicationQuestions from '@/components/SuggestionResults/ApplicationQues
 import CoverLetterSuggestion from '@/components/SuggestionResults/CoverLetterSuggestion';
 import ResumeSuggestions from '@/components/SuggestionResults/ResumeSuggestions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useApplicationQuestions } from '@/hooks/useApplicationQuestions';
 import type { FilesStorageState } from '@/types/fileManagement';
 import { type FullSuggestionGeneration } from '@/types/suggestionGeneration';
 import { useState } from 'react';
@@ -10,18 +9,10 @@ import { useState } from 'react';
 type SuggestionTabProps = {
 	fullSuggestionResults: FullSuggestionGeneration | null | undefined;
 	storedFilesObj: FilesStorageState;
-	currentTabId: number | null;
 };
 
-const SuggestionTab = ({ fullSuggestionResults, storedFilesObj, currentTabId }: SuggestionTabProps) => {
+const SuggestionTab = ({ fullSuggestionResults, storedFilesObj }: SuggestionTabProps) => {
 	const [innerTab, setInnerTab] = useState<'resume' | 'coverLetter' | 'applicationQuestions'>('resume');
-
-	const {
-		savedApplicationQuestions,
-		saveQuestion,
-		deleteQuestion,
-		errorMessage: applicationQuestionsError,
-	} = useApplicationQuestions(currentTabId);
 
 	if (!fullSuggestionResults) {
 		return (
@@ -64,17 +55,9 @@ const SuggestionTab = ({ fullSuggestionResults, storedFilesObj, currentTabId }: 
 				</TabsContent>
 
 				<TabsContent value='applicationQuestions' className='flex-1 overflow-auto'>
-					{applicationQuestionsError && (
-						<div className='mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
-							{applicationQuestionsError}
-						</div>
-					)}
 					<ApplicationQuestions
 						extractedJobPostingDetails={fullSuggestionResults.extracted_job_posting_details}
 						storedFilesObj={storedFilesObj}
-						savedApplicationQuestions={savedApplicationQuestions}
-						onSaveQuestion={saveQuestion}
-						onDeleteQuestion={deleteQuestion}
 					/>
 				</TabsContent>
 			</Tabs>

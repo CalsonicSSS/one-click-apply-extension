@@ -1,44 +1,44 @@
+import { CreditManager } from '@/components/CreditManager';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import GenerationProgressBar from '@/components/GenerationProgressBar';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { TIER_ONE_USER_CREDIT_COUNT } from '@/constants/environments';
+import { FREE_TIER_USER_CREDIT_COUNT } from '@/constants/environments';
 import type { FilesStorageState } from '@/types/fileManagement';
 import { GenerationStage, type GenerationProgress } from '@/types/progressTracking';
 import { Trash2, Upload } from 'lucide-react';
 import { useRef, type ChangeEvent } from 'react';
-import { CreditManager } from '@/components/CreditManager';
 
 type ProfileTabProps = {
-	currentTabId: number | null;
 	storedFilesObj: FilesStorageState;
 	fileHandlingErrorMessage: string | null;
-	lastSuggestionAndCreditUsedLoadingErrMessage: string | null;
+	sugguestionHandlingErrorMessage: string | null;
 	suggestionCreditUsagePercentage: number;
 	usedSuggestionCredits: number;
-	uploadAndStoreFile: (file: File, docCategoryType: 'resume' | 'supporting') => Promise<void>;
+	uploadFile: (file: File, docCategoryType: 'resume' | 'supporting') => Promise<void>;
 	removeFile: (id: string, docCategoryType: 'resume' | 'supporting') => Promise<void>;
 	isSuggestionGenerationError: boolean;
 	suggestionGenerationError: Error;
 	isSuggestionGenerationPending: boolean;
 	onGenerateSuggestions: () => void;
 	generationProgress: GenerationProgress | null;
+	browserId: string;
 };
 
 const ProfileTab = ({
-	currentTabId,
 	storedFilesObj,
 	fileHandlingErrorMessage,
-	lastSuggestionAndCreditUsedLoadingErrMessage,
+	sugguestionHandlingErrorMessage,
 	suggestionCreditUsagePercentage,
 	usedSuggestionCredits,
-	uploadAndStoreFile,
+	uploadFile,
 	removeFile,
 	isSuggestionGenerationError,
 	suggestionGenerationError,
 	isSuggestionGenerationPending,
 	onGenerateSuggestions,
 	generationProgress,
+	browserId,
 }: ProfileTabProps) => {
 	const resumeInputRef = useRef<HTMLInputElement>(null);
 	const supportingInputRef = useRef<HTMLInputElement>(null);
@@ -49,7 +49,7 @@ const ProfileTab = ({
 	) => {
 		const file = event.target.files?.[0];
 		if (file) {
-			await uploadAndStoreFile(file, fileCategoryType);
+			await uploadFile(file, fileCategoryType);
 			event.target.value = '';
 		}
 	};
@@ -65,16 +65,9 @@ const ProfileTab = ({
 					{fileHandlingErrorMessage}
 				</div>
 			)}
-			{lastSuggestionAndCreditUsedLoadingErrMessage && (
+			{sugguestionHandlingErrorMessage && (
 				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
-					{lastSuggestionAndCreditUsedLoadingErrMessage}
-				</div>
-			)}
-			{currentTabId ? (
-				<></>
-			) : (
-				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
-					{`Could not load current page tab ID`}
+					{sugguestionHandlingErrorMessage}
 				</div>
 			)}
 			{/* File upload buttons */}
@@ -134,7 +127,7 @@ const ProfileTab = ({
 				<div className='mb-2 flex justify-between text-xs text-gray-600'>
 					<span>{suggestionCreditUsagePercentage}% used</span>
 					<span>
-						{usedSuggestionCredits} / {TIER_ONE_USER_CREDIT_COUNT}
+						{usedSuggestionCredits} / {FREE_TIER_USER_CREDIT_COUNT}
 					</span>
 				</div>
 				<div className='h-1.5 w-full overflow-hidden rounded-full bg-gray-200'>
@@ -225,7 +218,7 @@ const ProfileTab = ({
 			<div className='flex-grow'></div>
 
 			{/* Credit Manager */}
-			<CreditManager />
+			<CreditManager browserId={browserId} />
 
 			{/* Your Feedback & Rant Button at the very bottom */}
 			<Button

@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useFileManagement } from '@/hooks/useFileManagement';
-import { useSuggestionGenerationProcess } from '@/hooks/useSuggestionGeneration';
+import { useSuggestionGeneration } from '@/hooks/useSuggestionGeneration';
 import { GenerationStage } from '@/types/progressTracking';
 import { useEffect, useState } from 'react';
 import ProfileTab from './tabs/ProfileTab';
@@ -12,18 +12,18 @@ const SidePanelMain = () => {
 	const {
 		storedFilesObj,
 		isLoading: filesLoading,
-		uploadAndStoreFile,
+		uploadFile,
 		removeFile,
 		fileHandlingErrorMessage,
 	} = useFileManagement();
 
 	const {
+		usedCredits,
+		sugguestionHandlingErrorMessage,
 		suggestionCreditUsagePercentage,
-		usedSuggestionCredits,
-		lastSuggestionAndCreditUsedLoadingErrMessage,
-		lastSuggestion,
-		currentTabId,
+		tabSpecificLatestFullSuggestion,
 		generationProgress,
+		browserId,
 		mutation: {
 			isError: isSuggestionGenerationError,
 			error: suggestionGenerationError,
@@ -31,7 +31,7 @@ const SidePanelMain = () => {
 			data: fullGeneratedSuggestionData,
 			mutate: suggestionGenerationMutate,
 		},
-	} = useSuggestionGenerationProcess(storedFilesObj);
+	} = useSuggestionGeneration(storedFilesObj);
 
 	// Switch to suggestion tab when new results are available
 	useEffect(() => {
@@ -58,9 +58,6 @@ const SidePanelMain = () => {
 		);
 	}
 
-	// Determine what to show in the suggestion tab
-	const fullSuggestionResults = fullGeneratedSuggestionData || lastSuggestion;
-
 	return (
 		<div className='flex h-screen w-full flex-col bg-white'>
 			{/* Header */}
@@ -78,27 +75,26 @@ const SidePanelMain = () => {
 
 				<TabsContent value='profile' className='flex-1 overflow-auto py-4'>
 					<ProfileTab
-						currentTabId={currentTabId}
 						storedFilesObj={storedFilesObj}
 						fileHandlingErrorMessage={fileHandlingErrorMessage}
-						lastSuggestionAndCreditUsedLoadingErrMessage={lastSuggestionAndCreditUsedLoadingErrMessage}
+						sugguestionHandlingErrorMessage={sugguestionHandlingErrorMessage}
 						suggestionCreditUsagePercentage={suggestionCreditUsagePercentage}
-						usedSuggestionCredits={usedSuggestionCredits}
-						uploadAndStoreFile={uploadAndStoreFile}
+						usedSuggestionCredits={usedCredits}
+						uploadFile={uploadFile}
 						removeFile={removeFile}
 						isSuggestionGenerationError={isSuggestionGenerationError}
 						suggestionGenerationError={suggestionGenerationError}
 						isSuggestionGenerationPending={isSuggestionGenerationPending}
 						onGenerateSuggestions={handleGenerateSuggestions}
 						generationProgress={generationProgress}
+						browserId={browserId}
 					/>
 				</TabsContent>
 
 				<TabsContent value='suggestion' className='flex-1 overflow-auto py-4'>
 					<SuggestionTab
-						fullSuggestionResults={fullSuggestionResults}
+						fullSuggestionResults={tabSpecificLatestFullSuggestion}
 						storedFilesObj={storedFilesObj}
-						currentTabId={currentTabId}
 					/>
 				</TabsContent>
 			</Tabs>

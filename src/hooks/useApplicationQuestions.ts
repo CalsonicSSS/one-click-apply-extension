@@ -1,93 +1,113 @@
-// src/hooks/useApplicationQuestions.ts
-
-import type { ApplicationQuestion } from '@/types/suggestionGeneration';
+import { generateApplicationQuestionAnswerRequest } from '@/api/suggestionGeneration';
+import type { AnsweredQuestion, ApplicationQuestionAnswerResponse } from '@/types/suggestionGeneration';
+import { formatDate } from '@/utils/datetime';
+import { useStorage } from '@plasmohq/storage/hook';
+import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
-type UseApplicationQuestionsReturn = {
-	savedApplicationQuestions: ApplicationQuestion[];
-	saveQuestion: (question: ApplicationQuestion) => Promise<void>;
-	deleteQuestion: (id: string) => Promise<void>;
-	errorMessage: string | null;
-};
+export const useApplicationQuestions = () => {
+	const [currentTabId, setCurrentTabId] = useState<number | null>(null);
+	const [questionInput, setQuestionInput] = useState('');
+	const [additionalRequirementsInput, setAdditionalRequirementsInput] = useState('');
+	// includes all answers from all different potentials tabs
+	const [allAnsweredQuestions, setAllAnsweredQuestions] = useStorage<Record<string, AnsweredQuestion[]>>(
+		'allAnsweredQuestions',
+		{},
+	);
+	const [tabSpecificAnsweredQuestions, setTabSpecificAnsweredQuestions] = useState<AnsweredQuestion[]>();
+	const [questionHandlingErrorMessage, setQuestionHandlingErrorMessage] = useState<string>('');
 
-export const useApplicationQuestions = (currentTabId: number | null): UseApplicationQuestionsReturn => {
-	const [savedApplicationQuestions, setSavedApplicationQuestions] = useState<ApplicationQuestion[]>([]);
-	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-	// Load questions when the component mounts or tab ID changes
+	// Get the current tab ID when the hook initializes
 	useEffect(() => {
-		const loadQuestions = async () => {
+		const getCurrentTabId = async () => {
+			try {
+				const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+				if (tabs[0]?.id) {
+					setCurrentTabId(tabs[0].id);
+				}
+			} catch (err) {
+				console.error('Error getting current tab ID:', err);
+				setQuestionHandlingErrorMessage('Error getting current tab ID');
+			}
+		};
+		getCurrentTabId();
+	}, []);
+
+	useEffect(() => {
+		const loadTabSpecificQuestions = async () => {
 			if (!currentTabId) return;
 
 			try {
-				const result = await chrome.storage.local.get('tabApplicationQuestions');
-				const tabQuestions = result.tabApplicationQuestions || {};
-
 				// Get questions for the current tab
-				setSavedApplicationQuestions(tabQuestions[currentTabId] || []);
+				setTabSpecificAnsweredQuestions(allAnsweredQuestions[currentTabId] || []);
 			} catch (err) {
 				console.error('Error loading application questions:', err);
-				setErrorMessage('Failed to load saved application questions');
+				setQuestionHandlingErrorMessage('Failed to load saved application questions');
 			}
 		};
 
-		loadQuestions();
+		loadTabSpecificQuestions();
 	}, [currentTabId]);
 
-	// Save a new question and also update state of the applicationQuestions for display
-	const saveQuestion = async (question: ApplicationQuestion): Promise<void> => {
+	const saveQuestion = async (question: AnsweredQuestion): Promise<void> => {
 		if (!currentTabId) return;
 
 		try {
-			// Get current questions for all tabs
-			const result = await chrome.storage.local.get('tabApplicationQuestions');
-			const tabQuestions = result.tabApplicationQuestions || {};
+			const updatedTabQuestions = [question, ...tabSpecificAnsweredQuestions];
+			setTabSpecificAnsweredQuestions(updatedTabQuestions);
 
-			// Update questions for the current tab
-			const currentTabQuestions = tabQuestions[currentTabId] || [];
-			const updatedTabQuestions = [question, ...currentTabQuestions];
-
-			// Update storage with the new questions
-			tabQuestions[currentTabId] = updatedTabQuestions;
-			await chrome.storage.local.set({ tabApplicationQuestions: tabQuestions });
-
-			// Update local state
-			setSavedApplicationQuestions(updatedTabQuestions);
+			allAnsweredQuestions[currentTabId] = updatedTabQuestions;
+			setAllAnsweredQuestions(allAnsweredQuestions);
 		} catch (err) {
 			console.error('Error saving application question:', err);
-			setErrorMessage('Failed to save application question');
+			setQuestionHandlingErrorMessage('Failed to save and update answered question');
 		}
 	};
 
-	// Delete a question also update state of the applicationQuestions for display
 	const deleteQuestion = async (id: string): Promise<void> => {
 		if (!currentTabId) return;
 
 		try {
-			// Get current questions for all tabs
-			const result = await chrome.storage.local.get('tabApplicationQuestions');
-			const tabQuestions = result.tabApplicationQuestions || {};
+			const updatedTabQuestions = tabSpecificAnsweredQuestions.filter((q) => q.id !== id);
+			setTabSpecificAnsweredQuestions(updatedTabQuestions);
 
-			// Filter out the deleted question for the current tab
-			const currentTabQuestions = tabQuestions[currentTabId] || [];
-			const updatedTabQuestions = currentTabQuestions.filter((q) => q.id !== id);
-
-			// Update storage with the updated questions
-			tabQuestions[currentTabId] = updatedTabQuestions;
-			await chrome.storage.local.set({ tabApplicationQuestions: tabQuestions });
-
-			// Update local state
-			setSavedApplicationQuestions(updatedTabQuestions);
+			allAnsweredQuestions[currentTabId] = updatedTabQuestions;
+			setAllAnsweredQuestions(allAnsweredQuestions);
 		} catch (err) {
 			console.error('Error deleting application question:', err);
-			setErrorMessage('Failed to delete application question');
+			setQuestionHandlingErrorMessage('Failed to delete answered question');
 		}
 	};
 
+	// Generate answer mutation
+	const mutation = useMutation({
+		mutationFn: generateApplicationQuestionAnswerRequest,
+		onSuccess: async (data: ApplicationQuestionAnswerResponse) => {
+			const newAnsweredQuestion: AnsweredQuestion = {
+				id: crypto.randomUUID(),
+				question: data.question,
+				additionalRequirements: additionalRequirementsInput.trim() || undefined,
+				answer: data.answer,
+				createdAt: formatDate(new Date()),
+			};
+
+			await saveQuestion(newAnsweredQuestion);
+			setQuestionInput('');
+			setAdditionalRequirementsInput('');
+		},
+		onError: (error) => {
+			setQuestionHandlingErrorMessage(error.message);
+		},
+	});
+
 	return {
-		savedApplicationQuestions,
-		saveQuestion,
+		questionInput,
+		setQuestionInput,
+		additionalRequirementsInput,
+		setAdditionalRequirementsInput,
+		tabSpecificAnsweredQuestions,
 		deleteQuestion,
-		errorMessage,
+		questionHandlingErrorMessage,
+		mutation,
 	};
 };

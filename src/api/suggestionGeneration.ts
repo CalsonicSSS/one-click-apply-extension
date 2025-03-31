@@ -12,11 +12,17 @@ import type {
 	ResumeSuggestionsResponse,
 } from '@/types/suggestionGeneration';
 
-export const evaluateJobPostingPageRequest = async (inputs: JobPostingEvalRequestInputs) => {
+export const evaluateJobPostingPageRequest = async ({
+	jobPostingPageContent,
+	browserId,
+}: {
+	jobPostingPageContent: string;
+	browserId: string;
+}) => {
 	// create post request payload
-	const requestPayload = {
-		raw_job_html_content: inputs.jobPostingPageContent,
-		browser_id: inputs.browser_id,
+	const requestPayload: JobPostingEvalRequestInputs = {
+		raw_job_html_content: jobPostingPageContent,
+		browser_id: browserId,
 	};
 
 	// all errors are handled on server side by fastapi
@@ -43,11 +49,9 @@ export const evaluateJobPostingPageRequest = async (inputs: JobPostingEvalReques
 export const generateResumeSuggestionRequest = async ({
 	extractedJobPostingDetails,
 	storedFilesObj,
-	browserId,
 }: {
 	extractedJobPostingDetails: ExtractedJobPostingDetails;
 	storedFilesObj: FilesStorageState;
-	browserId: string;
 }) => {
 	const requestPayload: ResumeSuggestionGenerationRequestInputs = {
 		extracted_job_posting_details: extractedJobPostingDetails,
@@ -56,10 +60,9 @@ export const generateResumeSuggestionRequest = async ({
 			file_type: storedFilesObj.resume!.fileType,
 			name: storedFilesObj.resume!.name,
 		},
-		browser_id: browserId,
 	};
 
-	const response = await fetch(`${DOMAIN_URL}/api/v1/generation/resume/suggestions-generate`, {
+	const response = await fetch(`${DOMAIN_URL}/api/v1/generation/resume-suggestions/generate`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(requestPayload),
@@ -79,11 +82,9 @@ export const generateResumeSuggestionRequest = async ({
 export const generateCoverLetterRequest = async ({
 	extractedJobPostingDetails,
 	storedFilesObj,
-	browserId,
 }: {
 	extractedJobPostingDetails: ExtractedJobPostingDetails;
 	storedFilesObj: FilesStorageState;
-	browserId: string;
 }) => {
 	const requestPayload: CoverLetterGenerationRequestInputs = {
 		extracted_job_posting_details: extractedJobPostingDetails,
@@ -92,7 +93,6 @@ export const generateCoverLetterRequest = async ({
 			file_type: storedFilesObj.resume!.fileType,
 			name: storedFilesObj.resume!.name,
 		},
-		browser_id: browserId,
 	};
 
 	if (storedFilesObj.supportingDocs.length > 0) {
@@ -121,17 +121,15 @@ export const generateCoverLetterRequest = async ({
 // ----------------------------------------------------------------------------------------
 
 export const generateApplicationQuestionAnswerRequest = async ({
-	question,
-	additionalRequirements,
+	questionInput,
+	additionalRequirementsInput,
 	extractedJobPostingDetails,
 	storedFilesObj,
-	browserId,
 }: {
-	question: string;
-	additionalRequirements?: string;
+	questionInput: string;
+	additionalRequirementsInput?: string;
 	extractedJobPostingDetails: ExtractedJobPostingDetails;
 	storedFilesObj: FilesStorageState;
-	browserId: string;
 }) => {
 	const requestPayload: ApplicationQuestionGenerationRequestInputs = {
 		extracted_job_posting_details: extractedJobPostingDetails,
@@ -140,14 +138,8 @@ export const generateApplicationQuestionAnswerRequest = async ({
 			file_type: storedFilesObj.resume!.fileType,
 			name: storedFilesObj.resume!.name,
 		},
-		question: question,
-		browser_id: browserId,
+		question: questionInput,
 	};
-
-	// Add additional requirements if provided
-	if (additionalRequirements) {
-		requestPayload.additional_requirements = additionalRequirements;
-	}
 
 	// Add supporting documents if available
 	if (storedFilesObj.supportingDocs.length > 0) {
@@ -156,6 +148,11 @@ export const generateApplicationQuestionAnswerRequest = async ({
 			file_type: doc.fileType,
 			name: doc.name,
 		}));
+	}
+
+	// Add additional requirements if provided
+	if (additionalRequirementsInput) {
+		requestPayload.additional_requirements = additionalRequirementsInput;
 	}
 
 	const response = await fetch(`${DOMAIN_URL}/api/v1/generation/application-question/answer`, {

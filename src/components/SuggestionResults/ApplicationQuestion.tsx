@@ -1,35 +1,31 @@
-import { generateApplicationQuestionAnswerRequest } from '@/api/suggestionGeneration';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useApplicationQuestions } from '@/hooks/useApplicationQuestions';
 import type { FilesStorageState } from '@/types/fileManagement';
-import type { ApplicationQuestion, ExtractedJobPostingDetails } from '@/types/suggestionGeneration';
-import { formatDate } from '@/utils/coverletterFormatDownload';
-import { useStorage } from '@plasmohq/storage/hook';
-import { useMutation } from '@tanstack/react-query';
+import type { ExtractedJobPostingDetails } from '@/types/suggestionGeneration';
 import { CheckCircle, Copy, HelpCircle, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 type ApplicationQuestionsTabProps = {
 	extractedJobPostingDetails: ExtractedJobPostingDetails;
 	storedFilesObj: FilesStorageState;
-	savedApplicationQuestions: ApplicationQuestion[];
-	onSaveQuestion: (question: ApplicationQuestion) => Promise<void>;
-	onDeleteQuestion: (id: string) => Promise<void>;
 };
 
-const ApplicationQuestions = ({
-	extractedJobPostingDetails,
-	storedFilesObj,
-	savedApplicationQuestions,
-	onSaveQuestion,
-	onDeleteQuestion,
-}: ApplicationQuestionsTabProps) => {
-	const [question, setQuestion] = useState('');
-	const [additionalRequirements, setAdditionalRequirements] = useState('');
+const ApplicationQuestions = ({ extractedJobPostingDetails, storedFilesObj }: ApplicationQuestionsTabProps) => {
 	const [copyStates, setCopyStates] = useState<{ [key: string]: boolean }>({});
-	const [browserId] = useStorage("browserId")
-	
+
+	const {
+		questionInput,
+		setQuestionInput,
+		additionalRequirementsInput,
+		setAdditionalRequirementsInput,
+		tabSpecificAnsweredQuestions,
+		deleteQuestion,
+		questionHandlingErrorMessage,
+		mutation: { isError, error, isPending, mutate },
+	} = useApplicationQuestions();
+
 	// Handle copy to clipboard
 	const handleCopy = (text: string, id: string) => {
 		navigator.clipboard.writeText(text);
@@ -39,42 +35,18 @@ const ApplicationQuestions = ({
 		}, 2000);
 	};
 
-	// Generate answer mutation
-	const mutation = useMutation({
-		mutationFn: async () => {
-			const response = await generateApplicationQuestionAnswerRequest({
-				question,
-				additionalRequirements: additionalRequirements.trim() || undefined,
-				extractedJobPostingDetails,
-				storedFilesObj,
-				browserId,
-			});
-
-			// Save to local questions
-			const newQuestion: ApplicationQuestion = {
-				id: crypto.randomUUID(),
-				question,
-				additionalRequirements: additionalRequirements.trim() || undefined,
-				answer: response.answer,
-				createdAt: formatDate(new Date()),
-			};
-
-			// Save question and answer
-			await onSaveQuestion(newQuestion);
-
-			// Reset form
-			setQuestion('');
-			setAdditionalRequirements('');
-
-			return response;
-		},
-	});
-
 	return (
 		<div className='space-y-6'>
+			{/* Error Messages */}
+			{questionHandlingErrorMessage && (
+				<div className='mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
+					{questionHandlingErrorMessage}
+				</div>
+			)}
+
 			{/* Question input form */}
 			<div className='space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4'>
-				<h3 className='text-sm font-medium'>Generate Answer for Application Input Questions</h3>
+				<h3 className='text-sm font-medium'>Generate Answer for Application Questions</h3>
 
 				<div className='space-y-2'>
 					<div className='flex items-center justify-between'>
@@ -94,7 +66,7 @@ const ApplicationQuestions = ({
 							</Tooltip>
 						</TooltipProvider>
 					</div>
-					<Input id='question' value={question} onChange={(e) => setQuestion(e.target.value)} />
+					<Input id='question' value={questionInput} onChange={(e) => setQuestionInput(e.target.value)} />
 				</div>
 
 				<div className='space-y-2'>
@@ -118,17 +90,24 @@ const ApplicationQuestions = ({
 					</div>
 					<Input
 						id='requirements'
-						value={additionalRequirements}
-						onChange={(e) => setAdditionalRequirements(e.target.value)}
+						value={additionalRequirementsInput}
+						onChange={(e) => setAdditionalRequirementsInput(e.target.value)}
 					/>
 				</div>
 
 				<Button
 					className='w-full'
-					onClick={() => mutation.mutate()}
-					disabled={mutation.isPending || !question.trim()}
+					onClick={() =>
+						mutate({
+							questionInput,
+							additionalRequirementsInput,
+							extractedJobPostingDetails,
+							storedFilesObj,
+						})
+					}
+					disabled={isPending || !questionInput.trim()}
 				>
-					{mutation.isPending ? (
+					{isPending ? (
 						<span className='flex items-center justify-center'>
 							<span className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent'></span>
 							Generating...
@@ -138,19 +117,19 @@ const ApplicationQuestions = ({
 					)}
 				</Button>
 
-				{mutation.isError && (
+				{isError && (
 					<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
-						{mutation.error instanceof Error ? mutation.error.message : 'An error occurred'}
+						{error instanceof Error ? error.message : 'An error occurred'}
 					</div>
 				)}
 			</div>
 
 			{/* show saved Questions and Answers */}
-			{savedApplicationQuestions.length > 0 && (
+			{tabSpecificAnsweredQuestions.length > 0 && (
 				<div className='space-y-4'>
 					<h3 className='text-sm font-medium'>Your Saved Answers</h3>
 
-					{savedApplicationQuestions.map((item) => (
+					{tabSpecificAnsweredQuestions.map((item) => (
 						<div key={item.id} className='rounded-lg border border-gray-200'>
 							{/* Question header */}
 							<div className='border-b bg-gray-50 p-3'>
@@ -162,7 +141,7 @@ const ApplicationQuestions = ({
 									<Button
 										variant='ghost'
 										size='sm'
-										onClick={() => onDeleteQuestion(item.id)}
+										onClick={() => deleteQuestion(item.id)}
 										className='text-gray-500 hover:text-red-500'
 									>
 										<Trash2 className='h-4 w-4' />
@@ -200,7 +179,7 @@ const ApplicationQuestions = ({
 			)}
 
 			{/* Empty state */}
-			{savedApplicationQuestions.length === 0 && !mutation.isPending && (
+			{tabSpecificAnsweredQuestions.length === 0 && !isPending && (
 				<div className='py-8 text-center text-gray-500'>
 					<p className='text-sm'>No application questions answered yet</p>
 					<p className='mt-1 text-xs'>Paste a question from your job application to get a tailored answer</p>
