@@ -3,5 +3,5 @@
  * This ID will be used to identify users without requiring authentication
  */
 export function generateBrowserId(): string {
-  return crypto.randomUUID()
-} 
+	return crypto.randomUUID();
+}

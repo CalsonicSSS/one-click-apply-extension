@@ -39,36 +39,39 @@ export const extractPageContentFromActiveTab = async (): Promise<PageExtractionR
 };
 
 // -----------------------------------------------------------------------------------------------------------------------
+// the useSuggestionGeneration mainly responsible for handling states of allSuggestions and tabSpecificLatestFullSuggestion and suggestion generation process
+// which also involves other highly related state: currentTabId, credits, browserId (for user identification), generationProgress
+// we directly instansitate and manage here as they are working with the whole suggestion gen process here
+// we will also pass along the browserId and credit as well to credit manager component directly
 
 export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
+	const [tabSpecificLatestFullSuggestion, setTabSpecificLatestFullSuggestion] = useState<
+		FullSuggestionGeneration | null | undefined
+	>(null);
 	const [currentTabId, setCurrentTabId] = useState<number | null>(null);
-	// includes all suggestions from all different potentials tabs
-	const [allSuggestions, setAllSuggestions] = useStorage<Record<string, FullSuggestionGeneration>>(
-		'allSuggestions',
-		{},
-	);
-	const [tabSpecificLatestFullSuggestion, setTabSpecificLatestFullSuggestion] =
-		useState<FullSuggestionGeneration | null>(null);
-
-	const [usedCredits, setUsedCredits] = useState<number>(0);
+	const [credits, setCredits] = useState<number | null>(null);
+	const [usedCredits, setUsedCredits] = useState<number | null>(null);
 	const [sugguestionHandlingErrorMessage, setSugguestionHandlingErrorMessage] = useState<string>('');
 	const [generationProgress, setGenerationProgress] = useState<GenerationProgress | null>(null);
-	const [browserId, setBrowserId, { isLoading }] = useStorage('browserId');
+	const [browserId, setBrowserId] = useStorage('browserId');
 
-	const getUserCurrentUsedCreditCount = async () => {
-		if (!browserId) {
-			return;
+	const fetchAndSetUserCredits = async () => {
+		if (!browserId) return;
+		try {
+			const currentCredits = await getUserCredits(browserId);
+			setCredits(currentCredits);
+			setUsedCredits(FREE_TIER_USER_CREDIT_COUNT - currentCredits);
+		} catch (error) {
+			console.error('Error fetching user credits:', error);
+			setSugguestionHandlingErrorMessage('Failed to fetch your credits');
 		}
-		const currentCredits = await getUserCredits(browserId);
-		setUsedCredits(FREE_TIER_USER_CREDIT_COUNT - currentCredits);
 	};
-
 	// get user current credit count and then calculate the used credit
 	useEffect(() => {
-		if (!isLoading && !browserId) {
+		if (!browserId) {
 			setBrowserId(generateBrowserId());
 		}
-		getUserCurrentUsedCreditCount();
+		fetchAndSetUserCredits();
 	}, [browserId]);
 
 	// Get the current tab ID
@@ -86,16 +89,21 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 		getCurrentTabId();
 	}, []);
 
-	// Load tab-specific latest generation results
+	// Load tab-specific initial latest generation results
 	useEffect(() => {
 		const loadTabSpecificSuggestion = async () => {
 			if (!currentTabId) return;
 
 			try {
-				setTabSpecificLatestFullSuggestion(allSuggestions[currentTabId] || null);
+				const allSuggestionsResultPair = await chrome.storage.local.get('allSuggestions');
+				if (!allSuggestionsResultPair.allSuggestions) {
+					setTabSpecificLatestFullSuggestion(null);
+				} else {
+					setTabSpecificLatestFullSuggestion(allSuggestionsResultPair.allSuggestions[currentTabId]);
+				}
 			} catch (err) {
-				console.error('Error loading tab-specific last suggestion & credit count data:', err);
-				setSugguestionHandlingErrorMessage('Failed to load your suggestion');
+				console.error('Error loading tab-specific suggestion:', err);
+				setSugguestionHandlingErrorMessage('Failed to load your suggestions for this job');
 			}
 		};
 
@@ -103,23 +111,26 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 	}, [currentTabId]);
 
 	const handleGenerateSuggestionsProcess = async () => {
-		if (!currentTabId) {
-			throw new Error('No active tab found');
-		}
-
-		if (!browserId) {
-			throw new Error('No user/browser Id created or found yet');
-		}
-
-		const currentCreditsCount = await getUserCredits(browserId);
-		if (currentCreditsCount < 1) {
-			throw new Error('No more credits, lets purchase more!');
-		}
-
 		// Reset error message
 		setSugguestionHandlingErrorMessage(null);
 
 		try {
+			if (!currentTabId) {
+				throw new Error('No active tab found');
+			}
+
+			if (!browserId) {
+				throw new Error('No user/browser Id created or found');
+			}
+
+			if (!credits) {
+				throw new Error('No user credits available found');
+			}
+
+			if (credits < 1) {
+				throw new Error('No more credits, lets purchase more!');
+			}
+
 			// STEP 1: Extract page content
 			setGenerationProgress({
 				stagePercentage: GenerationStage.ANALYZING_JOB_POSTING,
@@ -173,12 +184,16 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 				extracted_job_posting_details: jobPostingEvaluationResponseResult.extracted_job_posting_details,
 			};
 
-			// after the entire process, we will call the getUserCredits to get the new currentCreditsCount to update usedCredits
-			getUserCurrentUsedCreditCount();
+			// after the entire process, we will call the setUserCredits to get the new currentCreditsCount to update usedCredits
+			fetchAndSetUserCredits();
 
-			// Update allSuggestions storage status and tabSpecificLatestFullSuggestion
+			// Update allSuggestions storage and tabSpecificLatestFullSuggestion states directly
+			const allSuggestionsResultPair = await chrome.storage.local.get('allSuggestions');
+			const allSuggestions =
+				(allSuggestionsResultPair.allSuggestions as Record<string, FullSuggestionGeneration>) || {};
 			allSuggestions[currentTabId] = newFullSuggestedResult;
-			setAllSuggestions(allSuggestions);
+			await chrome.storage.local.set({ allSuggestions });
+
 			setTabSpecificLatestFullSuggestion(newFullSuggestedResult);
 
 			return newFullSuggestedResult;
@@ -201,6 +216,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 	return {
 		mutation,
 		usedCredits,
+		credits,
 		sugguestionHandlingErrorMessage,
 		suggestionCreditUsagePercentage,
 		tabSpecificLatestFullSuggestion,

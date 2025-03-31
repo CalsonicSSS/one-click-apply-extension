@@ -73,51 +73,51 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 async function cleanupTabSpecificStoredGenData(tabId: number) {
 	try {
 		// {tabSuggestions: tabId: {...}, tabId: {...}, }
-		const storageResult = await chrome.storage.local.get(['tabSuggestions', 'tabApplicationQuestions']);
+		const storageResult = await chrome.storage.local.get(['allSuggestions', 'allAnsweredQuestions']);
 
-		// Handle tabSuggestions cleanup
-		const tabSuggestions = storageResult.tabSuggestions || {};
-		if (tabSuggestions[tabId]) {
-			delete tabSuggestions[tabId];
-			await chrome.storage.local.set({ tabSuggestions });
+		// Handle allSuggestions cleanup
+		const allSuggestions = storageResult.allSuggestions || {};
+		if (allSuggestions[tabId]) {
+			delete allSuggestions[tabId];
+			await chrome.storage.local.set({ allSuggestions });
 		}
 
-		// Handle tabApplicationQuestions cleanup
-		const tabApplicationQuestions = storageResult.tabApplicationQuestions || {};
-		if (tabApplicationQuestions[tabId]) {
-			delete tabApplicationQuestions[tabId];
-			await chrome.storage.local.set({ tabApplicationQuestions });
+		// Handle allAnsweredQuestions cleanup
+		const allAnsweredQuestions = storageResult.allAnsweredQuestions || {};
+		if (allAnsweredQuestions[tabId]) {
+			delete allAnsweredQuestions[tabId];
+			await chrome.storage.local.set({ allAnsweredQuestions });
 		}
 	} catch (error) {
 		console.error('Error cleaning up tab data:', error);
 	}
 }
 
-// Listen for messages from content scripts or side panels
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-	if (message.action === 'incrementCredits') {
-		incrementCreditUsage()
-			.then((newCount) => {
-				sendResponse({ success: true, newCount });
-			})
-			.catch((error) => {
-				sendResponse({ success: false, error });
-			});
-		return true; // Required for async response
-	}
-});
+// // Listen for messages from content scripts or side panels
+// chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+// 	if (message.action === 'incrementCredits') {
+// 		incrementCreditUsage()
+// 			.then((newCount) => {
+// 				sendResponse({ success: true, newCount });
+// 			})
+// 			.catch((error) => {
+// 				sendResponse({ success: false, error });
+// 			});
+// 		return true; // Required for async response
+// 	}
+// });
 
-// Centralized function to increment credit usage
-// This ensures atomic updates and prevents race conditions
-async function incrementCreditUsage(): Promise<number> {
-	try {
-		const result = await chrome.storage.local.get('usedSuggestionCreditsCount');
-		const currentCount = result.usedSuggestionCreditsCount || 0;
-		const newCount = currentCount + 1;
-		await chrome.storage.local.set({ usedSuggestionCreditsCount: newCount });
-		return newCount;
-	} catch (error) {
-		console.error('Error incrementing credits:', error);
-		throw error('Error incrementing your userd credits');
-	}
-}
+// // Centralized function to increment credit usage
+// // This ensures atomic updates and prevents race conditions
+// async function incrementCreditUsage(): Promise<number> {
+// 	try {
+// 		const result = await chrome.storage.local.get('usedSuggestionCreditsCount');
+// 		const currentCount = result.usedSuggestionCreditsCount || 0;
+// 		const newCount = currentCount + 1;
+// 		await chrome.storage.local.set({ usedSuggestionCreditsCount: newCount });
+// 		return newCount;
+// 	} catch (error) {
+// 		console.error('Error incrementing credits:', error);
+// 		throw error('Error incrementing your userd credits');
+// 	}
+// }

@@ -9,16 +9,11 @@ import SuggestionTab from './tabs/SuggestionTab';
 const SidePanelMain = () => {
 	const [activeTab, setActiveTab] = useState<string>('profile');
 
-	const {
-		storedFilesObj,
-		isLoading: filesLoading,
-		uploadFile,
-		removeFile,
-		fileHandlingErrorMessage,
-	} = useFileManagement();
+	const { storedFilesObj, uploadFile, removeFile, fileHandlingErrorMessage } = useFileManagement();
 
 	const {
 		usedCredits,
+		credits,
 		sugguestionHandlingErrorMessage,
 		suggestionCreditUsagePercentage,
 		tabSpecificLatestFullSuggestion,
@@ -28,14 +23,13 @@ const SidePanelMain = () => {
 			isError: isSuggestionGenerationError,
 			error: suggestionGenerationError,
 			isPending: isSuggestionGenerationPending,
-			data: fullGeneratedSuggestionData,
 			mutate: suggestionGenerationMutate,
 		},
 	} = useSuggestionGeneration(storedFilesObj);
 
 	// Switch to suggestion tab when new results are available
 	useEffect(() => {
-		if (fullGeneratedSuggestionData && generationProgress?.stagePercentage === GenerationStage.COMPLETED) {
+		if (generationProgress?.stagePercentage === GenerationStage.COMPLETED) {
 			// Add a small delay before switching to the suggestion tab
 			const timer = setTimeout(() => {
 				setActiveTab('suggestion');
@@ -44,19 +38,11 @@ const SidePanelMain = () => {
 			// Clean up timer if component unmounts
 			return () => clearTimeout(timer);
 		}
-	}, [fullGeneratedSuggestionData, generationProgress]);
+	}, [generationProgress]);
 
 	const handleGenerateSuggestions = () => {
 		suggestionGenerationMutate();
 	};
-
-	if (filesLoading) {
-		return (
-			<div className='flex min-h-screen w-full items-center justify-center p-6'>
-				<div className='animate-pulse text-gray-500'>Loading...</div>
-			</div>
-		);
-	}
 
 	return (
 		<div className='flex h-screen w-full flex-col bg-white'>
@@ -88,6 +74,7 @@ const SidePanelMain = () => {
 						onGenerateSuggestions={handleGenerateSuggestions}
 						generationProgress={generationProgress}
 						browserId={browserId}
+						credits={credits}
 					/>
 				</TabsContent>
 

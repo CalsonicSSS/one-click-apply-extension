@@ -1,25 +1,11 @@
 import { createCheckoutSession } from '@/api/payment';
-import { getUserCredits } from '@/api/user';
 import { Card } from '@/components/ui/card';
 import { CREDIT_PACKAGES } from '@/constants/environments';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from './ui/button';
 
-export function CreditManager({ browserId }: { browserId: string }) {
-	const [credits, setCredits] = useState<number>(0);
+export function CreditManager({ browserId, credits }: { browserId: string | null; credits: number | null }) {
 	const [loading, setLoading] = useState(false);
-
-	useEffect(() => {
-		const fetchUserCredits = async () => {
-			try {
-				const credits = await getUserCredits(browserId);
-				setCredits(credits);
-			} catch (error) {
-				console.error('Error fetching credits:', error);
-			}
-		};
-		fetchUserCredits();
-	}, [browserId]);
 
 	const handlePurchase = async (packageId: string) => {
 		try {
@@ -35,6 +21,9 @@ export function CreditManager({ browserId }: { browserId: string }) {
 		}
 	};
 
+	if (!browserId || !credits) {
+		return <></>;
+	}
 	return (
 		<Card className='mb-4 p-4'>
 			<div className='flex flex-col space-y-4'>

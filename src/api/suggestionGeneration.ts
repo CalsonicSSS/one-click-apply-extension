@@ -62,6 +62,14 @@ export const generateResumeSuggestionRequest = async ({
 		},
 	};
 
+	if (storedFilesObj.supportingDocs.length > 0) {
+		requestPayload.supporting_docs = storedFilesObj.supportingDocs.map((doc) => ({
+			base64_content: doc.base64Content,
+			file_type: doc.fileType,
+			name: doc.name,
+		}));
+	}
+
 	const response = await fetch(`${DOMAIN_URL}/api/v1/generation/resume-suggestions/generate`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },

@@ -31,6 +31,7 @@ export type JobPostingEvalResultResponse = {
 export type ResumeSuggestionGenerationRequestInputs = {
 	extracted_job_posting_details: ExtractedJobPostingDetails;
 	resume_doc: UploadedDocument;
+	supporting_docs?: UploadedDocument[];
 	// browser_id: string;
 };
 

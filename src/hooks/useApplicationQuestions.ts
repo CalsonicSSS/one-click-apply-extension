@@ -1,20 +1,15 @@
 import { generateApplicationQuestionAnswerRequest } from '@/api/suggestionGeneration';
 import type { AnsweredQuestion, ApplicationQuestionAnswerResponse } from '@/types/suggestionGeneration';
 import { formatDate } from '@/utils/datetime';
-import { useStorage } from '@plasmohq/storage/hook';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
+// this is only call under the ApplicationQuestion component
 export const useApplicationQuestions = () => {
 	const [currentTabId, setCurrentTabId] = useState<number | null>(null);
 	const [questionInput, setQuestionInput] = useState('');
 	const [additionalRequirementsInput, setAdditionalRequirementsInput] = useState('');
-	// includes all answers from all different potentials tabs
-	const [allAnsweredQuestions, setAllAnsweredQuestions] = useStorage<Record<string, AnsweredQuestion[]>>(
-		'allAnsweredQuestions',
-		{},
-	);
-	const [tabSpecificAnsweredQuestions, setTabSpecificAnsweredQuestions] = useState<AnsweredQuestion[]>();
+	const [tabSpecificAnsweredQuestions, setTabSpecificAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
 	const [questionHandlingErrorMessage, setQuestionHandlingErrorMessage] = useState<string>('');
 
 	// Get the current tab ID when the hook initializes
@@ -33,31 +28,41 @@ export const useApplicationQuestions = () => {
 		getCurrentTabId();
 	}, []);
 
+	// load initial tab specific answered questions
 	useEffect(() => {
 		const loadTabSpecificQuestions = async () => {
 			if (!currentTabId) return;
 
 			try {
-				// Get questions for the current tab
-				setTabSpecificAnsweredQuestions(allAnsweredQuestions[currentTabId] || []);
+				const allAnsweredQuestionsResultPair = await chrome.storage.local.get('allAnsweredQuestions');
+				if (!allAnsweredQuestionsResultPair.allAnsweredQuestions) {
+					setTabSpecificAnsweredQuestions([]);
+				} else {
+					setTabSpecificAnsweredQuestions(allAnsweredQuestionsResultPair.allAnsweredQuestions[currentTabId]);
+				}
 			} catch (err) {
-				console.error('Error loading application questions:', err);
-				setQuestionHandlingErrorMessage('Failed to load saved application questions');
+				console.error('Error loading tab-specific application questions:', err);
+				setQuestionHandlingErrorMessage('Failed to load saved questions');
 			}
 		};
 
 		loadTabSpecificQuestions();
 	}, [currentTabId]);
 
-	const saveQuestion = async (question: AnsweredQuestion): Promise<void> => {
+	const saveQuestion = async (answeredQuestion: AnsweredQuestion): Promise<void> => {
 		if (!currentTabId) return;
 
 		try {
-			const updatedTabQuestions = [question, ...tabSpecificAnsweredQuestions];
-			setTabSpecificAnsweredQuestions(updatedTabQuestions);
+			// update tabSpecificAnsweredQuestions state
+			const updatedTabAnsweredQuestions = [answeredQuestion, ...tabSpecificAnsweredQuestions];
+			setTabSpecificAnsweredQuestions(updatedTabAnsweredQuestions);
 
-			allAnsweredQuestions[currentTabId] = updatedTabQuestions;
-			setAllAnsweredQuestions(allAnsweredQuestions);
+			// update storage
+			const allAnsweredQuestionsResultPair = await chrome.storage.local.get('allAnsweredQuestions');
+			const allAnsweredQuestions =
+				(allAnsweredQuestionsResultPair.allAnsweredQuestions as Record<string, AnsweredQuestion[]>) || {};
+			allAnsweredQuestions[currentTabId] = updatedTabAnsweredQuestions;
+			await chrome.storage.local.set({ allAnsweredQuestions });
 		} catch (err) {
 			console.error('Error saving application question:', err);
 			setQuestionHandlingErrorMessage('Failed to save and update answered question');
@@ -68,11 +73,16 @@ export const useApplicationQuestions = () => {
 		if (!currentTabId) return;
 
 		try {
-			const updatedTabQuestions = tabSpecificAnsweredQuestions.filter((q) => q.id !== id);
-			setTabSpecificAnsweredQuestions(updatedTabQuestions);
+			// update tabSpecificAnsweredQuestions state
+			const updatedTabAnsweredQuestions = tabSpecificAnsweredQuestions.filter((q) => q.id !== id);
+			setTabSpecificAnsweredQuestions(updatedTabAnsweredQuestions);
 
-			allAnsweredQuestions[currentTabId] = updatedTabQuestions;
-			setAllAnsweredQuestions(allAnsweredQuestions);
+			// update storage
+			const allAnsweredQuestionsResultPair = await chrome.storage.local.get('allAnsweredQuestions');
+			const allAnsweredQuestions =
+				(allAnsweredQuestionsResultPair.allAnsweredQuestions as Record<string, AnsweredQuestion[]>) || {};
+			allAnsweredQuestions[currentTabId] = updatedTabAnsweredQuestions;
+			await chrome.storage.local.set({ allAnsweredQuestions });
 		} catch (err) {
 			console.error('Error deleting application question:', err);
 			setQuestionHandlingErrorMessage('Failed to delete answered question');

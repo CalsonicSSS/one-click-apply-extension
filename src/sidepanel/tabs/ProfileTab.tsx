@@ -22,7 +22,8 @@ type ProfileTabProps = {
 	isSuggestionGenerationPending: boolean;
 	onGenerateSuggestions: () => void;
 	generationProgress: GenerationProgress | null;
-	browserId: string;
+	browserId: string | null;
+	credits: null | number;
 };
 
 const ProfileTab = ({
@@ -39,6 +40,7 @@ const ProfileTab = ({
 	onGenerateSuggestions,
 	generationProgress,
 	browserId,
+	credits,
 }: ProfileTabProps) => {
 	const resumeInputRef = useRef<HTMLInputElement>(null);
 	const supportingInputRef = useRef<HTMLInputElement>(null);
@@ -218,7 +220,7 @@ const ProfileTab = ({
 			<div className='flex-grow'></div>
 
 			{/* Credit Manager */}
-			<CreditManager browserId={browserId} />
+			<CreditManager browserId={browserId} credits={credits} />
 
 			{/* Your Feedback & Rant Button at the very bottom */}
 			<Button
