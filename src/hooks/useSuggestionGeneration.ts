@@ -11,32 +11,6 @@ import { generateBrowserId } from '@/utils/browser';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
-type PageExtractionResult = {
-	success: boolean;
-	pageContent?: string;
-	url: string;
-	errorMessage?: string;
-};
-
-export const extractPageContentFromActiveTab = async (): Promise<PageExtractionResult> => {
-	// Query for the active tab in the current window
-	const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-	const activeTab = tabs[0];
-
-	if (!activeTab || !activeTab.id) {
-		throw new Error('No active job page found');
-	}
-
-	// chrome.tabs.sendMessage specifically designed to send messages to content scripts in a specific tab
-	const response = await chrome.tabs.sendMessage(activeTab.id, { action: 'getPageContent' });
-	if (response.success) {
-		return response;
-	} else {
-		throw new Error(response.errorMessage);
-	}
-};
-
-// -----------------------------------------------------------------------------------------------------------------------
 // the useSuggestionGeneration mainly responsible for handling states of allSuggestions and tabSpecificLatestFullSuggestion and suggestion generation process
 // which also involves other highly related state: currentTabId, credits, browserId (for user identification), generationProgress
 // we directly instansitate and manage here as they are working with the whole suggestion gen process here
@@ -48,9 +22,10 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 	>(null);
 	const [currentTabId, setCurrentTabId] = useState<number | null>(null);
 	const [credits, setCredits] = useState<number | null>(null);
-	const [sugguestionHandlingErrorMessage, setSugguestionHandlingErrorMessage] = useState<string>('');
 	const [generationProgress, setGenerationProgress] = useState<GenerationProgress | null>(null);
 	const [browserId, setBrowserId] = useState<string | null>(null);
+	const [sugguestionAndCreditLoadingErrMsg, setSugguestionAndCreditLoadingErrMsg] = useState<string>('');
+	const [jobPostingContent, setJobPostingContent] = useState<string>('');
 
 	const fetchAndSetUserCredits = async () => {
 		if (!browserId) return;
@@ -59,7 +34,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 			setCredits(currentCredits);
 		} catch (error) {
 			console.error('Error fetching user credits:', error);
-			setSugguestionHandlingErrorMessage('Failed to fetch your credits');
+			setSugguestionAndCreditLoadingErrMsg('Failed to fetch your credits');
 		}
 	};
 
@@ -107,15 +82,23 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 			if (!currentTabId) return;
 
 			try {
+				// even before allSuggestions is set, get here will return {} by default from chrome
+				// then allSuggestionsResultPair.allSuggestions will return undefined for sure, since its {}, not {allSuggestions:value}
 				const allSuggestionsResultPair = await chrome.storage.local.get('allSuggestions');
+
 				if (!allSuggestionsResultPair.allSuggestions) {
 					setTabSpecificLatestFullSuggestion(null);
-				} else {
+				} else if (
+					allSuggestionsResultPair.allSuggestions &&
+					allSuggestionsResultPair.allSuggestions[currentTabId]
+				) {
 					setTabSpecificLatestFullSuggestion(allSuggestionsResultPair.allSuggestions[currentTabId]);
+				} else {
+					setTabSpecificLatestFullSuggestion(null);
 				}
 			} catch (err) {
 				console.error('Error loading tab-specific suggestion:', err);
-				setSugguestionHandlingErrorMessage('Failed to load your suggestions for this job');
+				setSugguestionAndCreditLoadingErrMsg('Failed to load your suggestions for this job');
 			}
 		};
 
@@ -124,7 +107,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 
 	const handleGenerateSuggestionsProcess = async () => {
 		// Reset error message
-		setSugguestionHandlingErrorMessage(null);
+		setSugguestionAndCreditLoadingErrMsg(null);
 
 		try {
 			if (!currentTabId) {
@@ -140,7 +123,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 			}
 
 			if (credits < 1) {
-				throw new Error('No more credits, lets purchase more!');
+				throw new Error('No more credits, lets purchase more! 🚀');
 			}
 
 			// STEP 1: Extract page content
@@ -149,9 +132,9 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 				message: 'Analyzing job posting content...',
 			});
 
-			const pageExtractedContent = await extractPageContentFromActiveTab();
+			// const pageExtractedContent = await extractPageContentFromActiveTab();
 			const jobPostingEvaluationResponseResult = await evaluateJobPostingPageRequest({
-				jobPostingPageContent: pageExtractedContent.pageContent,
+				jobPostingPageContent: jobPostingContent,
 				browserId,
 			});
 
@@ -223,9 +206,11 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 	return {
 		mutation,
 		credits,
-		sugguestionHandlingErrorMessage,
+		sugguestionAndCreditLoadingErrMsg,
 		tabSpecificLatestFullSuggestion,
 		generationProgress,
 		browserId,
+		jobPostingContent,
+		setJobPostingContent,
 	};
 };

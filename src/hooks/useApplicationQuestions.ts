@@ -37,8 +37,13 @@ export const useApplicationQuestions = () => {
 				const allAnsweredQuestionsResultPair = await chrome.storage.local.get('allAnsweredQuestions');
 				if (!allAnsweredQuestionsResultPair.allAnsweredQuestions) {
 					setTabSpecificAnsweredQuestions([]);
-				} else {
+				} else if (
+					allAnsweredQuestionsResultPair.allAnsweredQuestions &&
+					allAnsweredQuestionsResultPair.allAnsweredQuestions[currentTabId]
+				) {
 					setTabSpecificAnsweredQuestions(allAnsweredQuestionsResultPair.allAnsweredQuestions[currentTabId]);
+				} else {
+					setTabSpecificAnsweredQuestions([]);
 				}
 			} catch (err) {
 				console.error('Error loading tab-specific application questions:', err);

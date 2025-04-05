@@ -13,7 +13,7 @@ const SidePanelMain = () => {
 
 	const {
 		credits,
-		sugguestionHandlingErrorMessage,
+		sugguestionAndCreditLoadingErrMsg,
 		tabSpecificLatestFullSuggestion,
 		generationProgress,
 		browserId,
@@ -23,6 +23,8 @@ const SidePanelMain = () => {
 			isPending: isSuggestionGenerationPending,
 			mutate: suggestionGenerationMutate,
 		},
+		setJobPostingContent,
+		jobPostingContent,
 	} = useSuggestionGeneration(storedFilesObj);
 
 	// Switch to suggestion tab when new results are available
@@ -61,7 +63,7 @@ const SidePanelMain = () => {
 					<ProfileTab
 						storedFilesObj={storedFilesObj}
 						fileHandlingErrorMessage={fileHandlingErrorMessage}
-						sugguestionHandlingErrorMessage={sugguestionHandlingErrorMessage}
+						sugguestionAndCreditLoadingErrMsg={sugguestionAndCreditLoadingErrMsg}
 						uploadFile={uploadFile}
 						removeFile={removeFile}
 						isSuggestionGenerationError={isSuggestionGenerationError}
@@ -71,6 +73,8 @@ const SidePanelMain = () => {
 						generationProgress={generationProgress}
 						browserId={browserId}
 						credits={credits}
+						setJobPostingContent={setJobPostingContent}
+						jobPostingContent={jobPostingContent}
 					/>
 				</TabsContent>
 

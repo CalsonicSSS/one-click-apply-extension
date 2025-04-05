@@ -2,16 +2,17 @@ import { CreditManager } from '@/components/CreditManager';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import GenerationProgressBar from '@/components/GenerationProgressBar';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { FilesStorageState } from '@/types/fileManagement';
 import { GenerationStage, type GenerationProgress } from '@/types/progressTracking';
-import { Trash2, Upload } from 'lucide-react';
+import { HelpCircle, Trash2, Upload } from 'lucide-react';
 import { useRef, type ChangeEvent } from 'react';
 
 type ProfileTabProps = {
 	storedFilesObj: FilesStorageState;
 	fileHandlingErrorMessage: string | null;
-	sugguestionHandlingErrorMessage: string | null;
+	sugguestionAndCreditLoadingErrMsg: string | null;
 	uploadFile: (file: File, docCategoryType: 'resume' | 'supporting') => Promise<void>;
 	removeFile: (id: string, docCategoryType: 'resume' | 'supporting') => Promise<void>;
 	isSuggestionGenerationError: boolean;
@@ -21,12 +22,14 @@ type ProfileTabProps = {
 	generationProgress: GenerationProgress | null;
 	browserId: string | null;
 	credits: null | number;
+	jobPostingContent: string;
+	setJobPostingContent: React.Dispatch<React.SetStateAction<string>>;
 };
 
 const ProfileTab = ({
 	storedFilesObj,
 	fileHandlingErrorMessage,
-	sugguestionHandlingErrorMessage,
+	sugguestionAndCreditLoadingErrMsg,
 	uploadFile,
 	removeFile,
 	isSuggestionGenerationError,
@@ -36,6 +39,8 @@ const ProfileTab = ({
 	generationProgress,
 	browserId,
 	credits,
+	jobPostingContent,
+	setJobPostingContent,
 }: ProfileTabProps) => {
 	const resumeInputRef = useRef<HTMLInputElement>(null);
 	const supportingInputRef = useRef<HTMLInputElement>(null);
@@ -62,9 +67,9 @@ const ProfileTab = ({
 					{fileHandlingErrorMessage}
 				</div>
 			)}
-			{sugguestionHandlingErrorMessage && (
+			{sugguestionAndCreditLoadingErrMsg && (
 				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
-					{sugguestionHandlingErrorMessage}
+					{sugguestionAndCreditLoadingErrMsg}
 				</div>
 			)}
 			{/* File upload buttons */}
@@ -171,18 +176,36 @@ const ProfileTab = ({
 					</div>
 				)}
 			</div>
-			{/* Suggestion generation error */}
-			{isSuggestionGenerationError && (
-				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
-					{suggestionGenerationError.message}
+
+			{/* Job posting input content by user */}
+			<div className='space-y-2'>
+				<div className='flex items-center justify-between'>
+					<label htmlFor='job content' className='text-xs font-medium text-gray-600'>
+						Job Posting Content *
+					</label>
+					<TooltipProvider delayDuration={300}>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<HelpCircle className='h-4 w-4 text-gray-400' />
+							</TooltipTrigger>
+							<TooltipContent side='top' align='center'>
+								<p className='max-w-xs text-xs'>Paste job content here to get started! 🚀</p>
+							</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
 				</div>
-			)}
+				<Input
+					id='job content'
+					value={jobPostingContent}
+					onChange={(e) => setJobPostingContent(e.target.value)}
+				/>
+			</div>
 			{/* Generate Button */}
 			<Button
 				variant='default'
 				className='h-12 w-full hover:opacity-90'
 				onClick={onGenerateSuggestions}
-				disabled={isSuggestionGenerationPending || !storedFilesObj.resume}
+				disabled={isSuggestionGenerationPending || !storedFilesObj.resume || !jobPostingContent}
 			>
 				{isSuggestionGenerationPending ? (
 					<span className='flex items-center justify-center'>
@@ -193,6 +216,14 @@ const ProfileTab = ({
 					'Generate Suggestions'
 				)}
 			</Button>
+
+			{/* Suggestion generation error */}
+			{isSuggestionGenerationError && (
+				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
+					{suggestionGenerationError.message}
+				</div>
+			)}
+
 			{/* Add progress bar below the button */}
 			{showProgressBar && <GenerationProgressBar progress={generationProgress} className='mt-2' />}
 
