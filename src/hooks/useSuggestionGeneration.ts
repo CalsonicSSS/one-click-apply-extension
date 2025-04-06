@@ -27,7 +27,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 	const [sugguestionAndCreditLoadingErrMsg, setSugguestionAndCreditLoadingErrMsg] = useState<string>('');
 	const [jobPostingContent, setJobPostingContent] = useState<string>('');
 
-	const fetchAndSetUserCredits = async () => {
+	const fetchAndSetUserCredits = async (browserId: string | null) => {
 		if (!browserId) return;
 		try {
 			const currentCredits = await getUserCredits(browserId);
@@ -57,7 +57,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 	// fetch user credit upon initial
 	useEffect(() => {
 		if (browserId) {
-			fetchAndSetUserCredits();
+			fetchAndSetUserCredits(browserId);
 		}
 	}, [browserId]);
 
@@ -76,7 +76,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 		getCurrentTabId();
 	}, []);
 
-	// Load tab-specific initial latest generation results
+	// Load tab-specific latest generation results
 	useEffect(() => {
 		const loadTabSpecificSuggestion = async () => {
 			if (!currentTabId) return;
@@ -180,7 +180,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 			};
 
 			// after the entire process, we will call the setUserCredits to get the new currentCreditsCount to update usedCredits
-			fetchAndSetUserCredits();
+			fetchAndSetUserCredits(browserId);
 
 			// Update allSuggestions storage and tabSpecificLatestFullSuggestion states directly
 			const allSuggestionsResultPair = await chrome.storage.local.get('allSuggestions');
