@@ -93,31 +93,14 @@ async function cleanupTabSpecificStoredGenData(tabId: number) {
 	}
 }
 
-// // Listen for messages from content scripts or side panels
-// chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-// 	if (message.action === 'incrementCredits') {
-// 		incrementCreditUsage()
-// 			.then((newCount) => {
-// 				sendResponse({ success: true, newCount });
-// 			})
-// 			.catch((error) => {
-// 				sendResponse({ success: false, error });
-// 			});
-// 		return true; // Required for async response
-// 	}
-// });
-
-// // Centralized function to increment credit usage
-// // This ensures atomic updates and prevents race conditions
-// async function incrementCreditUsage(): Promise<number> {
-// 	try {
-// 		const result = await chrome.storage.local.get('usedSuggestionCreditsCount');
-// 		const currentCount = result.usedSuggestionCreditsCount || 0;
-// 		const newCount = currentCount + 1;
-// 		await chrome.storage.local.set({ usedSuggestionCreditsCount: newCount });
-// 		return newCount;
-// 	} catch (error) {
-// 		console.error('Error incrementing credits:', error);
-// 		throw error('Error incrementing your userd credits');
-// 	}
-// }
+// Listen for the refreshCredits message from the success page
+chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+	if (message.action === 'refreshCredits') {
+		// Simply broadcast to all extension components
+		chrome.runtime.sendMessage({
+			action: 'creditUpdateRequired',
+			timestamp: Date.now(),
+		});
+		return true;
+	}
+});

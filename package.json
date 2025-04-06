@@ -1,6 +1,6 @@
 {
-	"name": "wise-craft",
-	"displayName": "Wise Craft",
+	"name": "ninja-craft",
+	"displayName": "Ninja Craft",
 	"version": "0.0.1",
 	"description": "Your tailored resume & CV, just one click away—on any job site you visit!",
 	"author": "Pillar.ai <calson.developer@gmail.com>",
@@ -55,7 +55,12 @@
 			"https://*/*"
 		],
 		"action": {
-			"default_title": "Open Wise Craft"
+			"default_title": "Open Ninja Craft"
+		},
+		"externally_connectable": {
+			"matches": [
+				"https://wise-craft-server.onrender.com/*"
+			]
 		},
 		"web_accessible_resources": [
 			{

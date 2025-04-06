@@ -105,6 +105,20 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 		loadTabSpecificSuggestion();
 	}, [currentTabId]);
 
+	// Listen for messages from the background script to refresh credits after user purchases
+	useEffect(() => {
+		function handleCreditUpdate(message) {
+			if (message.action === 'creditUpdateRequired' && browserId) {
+				fetchAndSetUserCredits(browserId);
+			}
+		}
+
+		chrome.runtime.onMessage.addListener(handleCreditUpdate);
+		return () => {
+			chrome.runtime.onMessage.removeListener(handleCreditUpdate);
+		};
+	}, [browserId]);
+
 	const handleGenerateSuggestionsProcess = async () => {
 		// Reset error message
 		setSugguestionAndCreditLoadingErrMsg(null);
