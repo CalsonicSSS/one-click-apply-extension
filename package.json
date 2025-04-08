@@ -49,7 +49,9 @@
 	"manifest": {
 		"permissions": [
 			"storage",
-			"sidePanel"
+			"sidePanel",
+			"tabs",
+			"activeTab"
 		],
 		"host_permissions": [
 			"https://*/*"

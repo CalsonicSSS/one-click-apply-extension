@@ -10,10 +10,12 @@
 // we are making the side panel feature to be tab specific instead of globally persistent
 // we remove the {side_panel default_path} in the manifest setting at root level (which will be available across all tabs), to manage side panels on per-tab basis
 // use the chrome.sidePanel.setOptions() API, you can control which pages/tabs the panel appears on.
-export {};
+export { currentUrl };
 
 // we will keep track of which tabs have the side panel enabled (later is used for the purpose of data-cleanup when specific tabs are closed on the chrome browser)
 const activePanelTabs: Set<number> = new Set();
+
+let currentUrl: string | undefined = undefined;
 
 // chrome.action refers to the extension's browser action (toolbar icon) | onClicked is an event triggered when the user clicks the extension icon.
 // The callback function receives the currently active tab (tab) as an argument. includes the id of the active tab
@@ -66,6 +68,11 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 		cleanupTabSpecificStoredGenData(tabId);
 		activePanelTabs.delete(tabId);
 	}
+});
+
+chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+	currentUrl = tabs[0].url;
+	console.log('currentUrl', currentUrl);
 });
 
 // this is to clean up tabSuggestions / tabApplicationQuestions data stored in current specific tab
