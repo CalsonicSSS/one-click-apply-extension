@@ -72,7 +72,6 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 
 chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
 	currentUrl = tabs[0].url;
-	console.log('currentUrl', currentUrl);
 });
 
 // this is to clean up tabSuggestions / tabApplicationQuestions data stored in current specific tab
