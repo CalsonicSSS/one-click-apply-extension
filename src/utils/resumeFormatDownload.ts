@@ -60,7 +60,15 @@ export const handleDownloadResumeDocx = async ({
 							spacing: {
 								after: 200,
 							},
-							// No border/underline for major section headers
+							// Add border for all major section headers
+							border: {
+								bottom: {
+									color: '#000000', // Black color for major section headers
+									space: 1,
+									style: BorderStyle.SINGLE,
+									size: 1,
+								},
+							},
 						}),
 
 						// Summary as bullet points from array
@@ -95,7 +103,15 @@ export const handleDownloadResumeDocx = async ({
 							spacing: {
 								after: 200,
 							},
-							// No border/underline for major section headers
+							// Add border for all major section headers
+							border: {
+								bottom: {
+									color: '#000000', // Black color for major section headers
+									space: 1,
+									style: BorderStyle.SINGLE,
+									size: 1,
+								},
+							},
 						}),
 
 						// Skills in two columns using a table
@@ -176,6 +192,8 @@ export const handleDownloadResumeDocx = async ({
 						...fullResume.sections.flatMap((section, sectionIndex, allSections) => {
 							// Check if this is the Work Experience section
 							const isWorkExperience = section.title.toLowerCase().includes('experience');
+							// Check if this is the Education section
+							const isEducation = section.title.toLowerCase().includes('education');
 
 							// First add the section header
 							const sectionElements = [
@@ -185,17 +203,15 @@ export const handleDownloadResumeDocx = async ({
 									spacing: {
 										after: 200,
 									},
-									// Only add border for work experience sections
-									border: isWorkExperience
-										? {
-												bottom: {
-													color: '#CCCCCC', // Light gray color
-													space: 1,
-													style: BorderStyle.SINGLE,
-													size: 1,
-												},
-											}
-										: undefined,
+									// Add black border for all section headers
+									border: {
+										bottom: {
+											color: '#000000', // Black color for all section headers
+											space: 1,
+											style: BorderStyle.SINGLE,
+											size: 1,
+										},
+									},
 								}),
 							];
 
@@ -307,7 +323,7 @@ export const handleDownloadResumeDocx = async ({
 										}
 									}
 
-									// Add a separator between jobs except for the last one
+									// Add a separator between jobs except for the first one and the last one
 									if (blockIndex < experienceBlocks.length - 1) {
 										sectionElements.push(
 											new Paragraph({
@@ -339,16 +355,8 @@ export const handleDownloadResumeDocx = async ({
 								return sectionElements;
 							} else {
 								// For other sections, process normally but without border
-								return [
-									new Paragraph({
-										text: section.title.toUpperCase(),
-										heading: HeadingLevel.HEADING_2,
-										spacing: {
-											after: 200,
-										},
-										// No border for non-work experience sections
-									}),
-									...section.content.split('\n').map((line) => {
+								const sectionContent = [
+									...section.content.split('\n').map((line, lineIndex) => {
 										const trimmedLine = line.trim();
 										if (!trimmedLine) {
 											return new Paragraph({
@@ -358,11 +366,26 @@ export const handleDownloadResumeDocx = async ({
 											});
 										}
 
-										// Check if it already starts with a bullet
+										// For Education section, don't add bullets to school names (usually the first line of each entry)
+										// This is a simple heuristic - we check if it's the education section and if the line
+										// doesn't already have a bullet and doesn't start with common educational details
+										const isSchoolName =
+											isEducation &&
+											!trimmedLine.startsWith('•') &&
+											!trimmedLine.startsWith('-') &&
+											!trimmedLine.startsWith('*') &&
+											!trimmedLine.match(
+												/^(bachelor|master|phd|doctor|associate|b\.s\.|m\.s\.|b\.a\.|m\.a\.|ph\.d\.|gpa|course|degree|certificate)/i,
+											) &&
+											(lineIndex === 0 ||
+												section.content.split('\n')[lineIndex - 1].trim() === '');
+
+										// Check if it already starts with a bullet or is a school name
 										if (
 											trimmedLine.startsWith('•') ||
 											trimmedLine.startsWith('-') ||
-											trimmedLine.startsWith('*')
+											trimmedLine.startsWith('*') ||
+											isSchoolName
 										) {
 											return new Paragraph({
 												text: trimmedLine,
@@ -393,6 +416,8 @@ export const handleDownloadResumeDocx = async ({
 										},
 									}),
 								];
+
+								return [sectionElements[0], ...sectionContent];
 							}
 						}),
 					],
@@ -462,6 +487,13 @@ export const handleDownloadResumePdf = async ({
 		doc.setFont('Helvetica', 'bold');
 		doc.setFontSize(12);
 		doc.text('PROFESSIONAL SUMMARY', margin, yPos);
+
+		// Add black line under section title
+		yPos += 2;
+		doc.setDrawColor(0); // Black color
+		doc.setLineWidth(0.5);
+		doc.line(margin, yPos, pageWidth - margin, yPos); // Full width line
+
 		yPos += 6; // Increased spacing after section title
 
 		// Add summary as bullet points
@@ -488,6 +520,13 @@ export const handleDownloadResumePdf = async ({
 		doc.setFont('Helvetica', 'bold');
 		doc.setFontSize(12);
 		doc.text('SKILLS', margin, yPos);
+
+		// Add black line under section title
+		yPos += 2;
+		doc.setDrawColor(0); // Black color
+		doc.setLineWidth(0.5);
+		doc.line(margin, yPos, pageWidth - margin, yPos); // Full width line
+
 		yPos += 6; // Increased spacing after section title
 
 		// Format skills in two columns
@@ -546,18 +585,19 @@ export const handleDownloadResumePdf = async ({
 			doc.setFont('Helvetica', 'bold');
 			doc.setFontSize(12);
 			doc.text(section.title.toUpperCase(), margin, yPos);
+
+			// Add black line under section title
+			yPos += 2;
+			doc.setDrawColor(0); // Black color
+			doc.setLineWidth(0.5);
+			doc.line(margin, yPos, pageWidth - margin, yPos); // Full width line
+
 			yPos += 6; // Consistent spacing after section title
 
-			// Only add horizontal line for work experience section
-			const isWorkExperience = section.title.toLowerCase().includes('experience');
-			if (isWorkExperience) {
-				// Add horizontal line
-				doc.setDrawColor(200); // Light gray color
-				doc.setLineWidth(0.2);
-				doc.line(margin, yPos - 2, pageWidth - margin, yPos - 2); // Full width line
-			}
-
 			// Check if this is work experience to format specially
+			const isWorkExperience = section.title.toLowerCase().includes('experience');
+			const isEducation = section.title.toLowerCase().includes('education');
+
 			if (isWorkExperience) {
 				// Split into job blocks
 				const experienceBlocks = section.content.split(/\n\s*\n/);
@@ -646,6 +686,7 @@ export const handleDownloadResumePdf = async ({
 					}
 
 					// Add separator between jobs except for the last one
+					// Only add light gray separator between jobs, not before the first one
 					if (blockIndex < experienceBlocks.length - 1) {
 						yPos += 4;
 
@@ -654,7 +695,7 @@ export const handleDownloadResumePdf = async ({
 							// Only if there's room
 							doc.setDrawColor(200); // Light gray color
 							doc.setLineWidth(0.1);
-							doc.line(margin, yPos - 2, pageWidth - margin, yPos - 2); // Full width line
+							doc.line(margin, yPos, pageWidth - margin, yPos); // Full width line
 						}
 
 						yPos += 6; // Increased spacing between job entries
@@ -666,10 +707,15 @@ export const handleDownloadResumePdf = async ({
 				doc.setFontSize(10);
 
 				const contentLines = section.content.split('\n');
-				for (const line of contentLines) {
+				let isFirstLineInEntry = true;
+
+				for (let lineIndex = 0; lineIndex < contentLines.length; lineIndex++) {
+					const line = contentLines[lineIndex];
 					const trimmedLine = line.trim();
+
 					if (!trimmedLine) {
 						yPos += 2;
+						isFirstLineInEntry = true; // Reset for next entry
 						continue;
 					}
 
@@ -679,15 +725,34 @@ export const handleDownloadResumePdf = async ({
 						yPos = margin;
 					}
 
-					// Add bulletpoint if not already there
-					let bulletLine = trimmedLine;
-					if (!trimmedLine.startsWith('•') && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('*')) {
-						bulletLine = '• ' + trimmedLine;
+					// Determine if this is a school name in education section
+					// School names are typically at the start of an entry and don't have common educational terms
+					const isSchoolName =
+						isEducation &&
+						isFirstLineInEntry &&
+						!trimmedLine.startsWith('•') &&
+						!trimmedLine.startsWith('-') &&
+						!trimmedLine.startsWith('*') &&
+						!trimmedLine.match(
+							/^(bachelor|master|phd|doctor|associate|b\.s\.|m\.s\.|b\.a\.|m\.a\.|ph\.d\.|gpa|course|degree|certificate)/i,
+						);
+
+					// Add bulletpoint if not already there and not a school name
+					let formattedLine = trimmedLine;
+					if (
+						!trimmedLine.startsWith('•') &&
+						!trimmedLine.startsWith('-') &&
+						!trimmedLine.startsWith('*') &&
+						!isSchoolName
+					) {
+						formattedLine = '• ' + trimmedLine;
 					}
 
-					const wrappedLines = doc.splitTextToSize(bulletLine, contentWidth);
+					const wrappedLines = doc.splitTextToSize(formattedLine, contentWidth);
 					doc.text(wrappedLines, margin, yPos);
 					yPos += wrappedLines.length * 5;
+
+					isFirstLineInEntry = false; // After processing a line, it's no longer the first line
 				}
 			}
 
