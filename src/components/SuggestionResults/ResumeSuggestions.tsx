@@ -1,9 +1,25 @@
-import type { ResumeSuggestion } from '@/types/suggestionGeneration';
-import { CheckCircle, Copy } from 'lucide-react';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import type { FullResumeGenerationResponse, ResumeSuggestion } from '@/types/suggestionGeneration';
+import { handleDownloadResumeDocx, handleDownloadResumePdf } from '@/utils/resumeFormatDownload';
+import { CheckCircle, Copy, Download, FileDown } from 'lucide-react';
 import { useState } from 'react';
 
-const ResumeSuggestions = ({ suggestions }: { suggestions: ResumeSuggestion[] }) => {
+type ResumeSuggestionsProps = {
+	suggestions: ResumeSuggestion[];
+	fullResume?: FullResumeGenerationResponse;
+	jobTitle: string;
+};
+
+const ResumeSuggestions = ({ suggestions, fullResume, jobTitle }: ResumeSuggestionsProps) => {
 	const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+	const [copied, setCopied] = useState(false);
+	const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+	const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
 
 	const handleCopySuggestion = (text: string, index: number) => {
 		navigator.clipboard.writeText(text);
@@ -11,8 +27,115 @@ const ResumeSuggestions = ({ suggestions }: { suggestions: ResumeSuggestion[] })
 		setTimeout(() => setCopiedIndex(null), 2000);
 	};
 
+	const handleCopyFullResume = () => {
+		if (fullResume) {
+			navigator.clipboard.writeText(fullResume.full_resume_text);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+		}
+	};
+
+	const onDownloadDocx = async () => {
+		if (!fullResume) return;
+
+		setIsDownloadingDocx(true);
+		try {
+			await handleDownloadResumeDocx({ fullResume, jobTitle });
+		} finally {
+			setIsDownloadingDocx(false);
+		}
+	};
+
+	const onDownloadPdf = async () => {
+		if (!fullResume) return;
+
+		setIsDownloadingPdf(true);
+		try {
+			await handleDownloadResumePdf({ fullResume, jobTitle });
+		} finally {
+			setIsDownloadingPdf(false);
+		}
+	};
+
 	return (
 		<div className=''>
+			{/* Full Resume Download Section */}
+			{fullResume && (
+				<div className='mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4'>
+					<div className='mb-3 flex items-center justify-between'>
+						<h3 className='text-sm font-medium'>Download Full Tailored Resume</h3>
+						<div className='flex space-x-2'>
+							<button
+								className='flex items-center rounded-md bg-white p-1.5 text-xs hover:bg-gray-100'
+								onClick={handleCopyFullResume}
+							>
+								{copied ? (
+									<>
+										<CheckCircle className='mr-1 h-3.5 w-3.5 text-green-500' />
+										<span>Copied!</span>
+									</>
+								) : (
+									<>
+										<Copy className='mr-1 h-3.5 w-3.5' />
+										<span>Copy</span>
+									</>
+								)}
+							</button>
+
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<button className='flex items-center rounded-md bg-white p-1.5 text-xs hover:bg-gray-100'>
+										<Download className='mr-1 h-3.5 w-3.5' />
+										<span>Download</span>
+									</button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align='end' className='w-[200px]'>
+									<DropdownMenuItem
+										onClick={onDownloadDocx}
+										disabled={isDownloadingDocx}
+										className='cursor-pointer'
+									>
+										{isDownloadingDocx ? (
+											<>
+												<span className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600'></span>
+												<span>Downloading...</span>
+											</>
+										) : (
+											<>
+												<FileDown className='mr-2 h-4 w-4' />
+												<span className='hover:font-medium'>Raw Word (.docx)</span>
+											</>
+										)}
+									</DropdownMenuItem>
+									<DropdownMenuItem
+										onClick={onDownloadPdf}
+										disabled={isDownloadingPdf}
+										className='cursor-pointer'
+									>
+										{isDownloadingPdf ? (
+											<>
+												<span className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600'></span>
+												<span>Downloading...</span>
+											</>
+										) : (
+											<>
+												<FileDown className='mr-2 h-4 w-4' />
+												<span className='hover:font-medium'>Formatted PDF (.pdf)</span>
+											</>
+										)}
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</div>
+					</div>
+					<p className='text-xs text-gray-600'>
+						Use these buttons to download a complete, tailored resume ready for submission.
+					</p>
+				</div>
+			)}
+
+			{/* Individual Suggestions */}
+			<h3 className='mb-3 text-sm font-medium'>Suggested Improvements</h3>
 			{suggestions.map((suggestion, index) => (
 				<div key={index} className='mb-8 overflow-hidden rounded-lg border border-gray-200'>
 					{/* Location in resume */}

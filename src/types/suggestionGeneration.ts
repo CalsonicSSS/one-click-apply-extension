@@ -29,11 +29,10 @@ export type JobPostingEvalResultResponse = {
 
 // ----------------------------------------------------------------------------------------
 
-export type ResumeSuggestionGenerationRequestInputs = {
+export type ResumeGenerationRequestInputs = {
 	extracted_job_posting_details: ExtractedJobPostingDetails;
 	resume_doc: UploadedDocument;
 	supporting_docs?: UploadedDocument[];
-	// browser_id: string;
 };
 
 export type ResumeSuggestion = {
@@ -46,13 +45,26 @@ export type ResumeSuggestionsResponse = {
 	resume_suggestions: ResumeSuggestion[];
 };
 
+export type ResumeSection = {
+	title: string;
+	content: string;
+};
+
+export type FullResumeGenerationResponse = {
+	applicant_name: string;
+	contact_info: string;
+	summary: string;
+	skills: string[];
+	sections: ResumeSection[];
+	full_resume_text: string;
+};
+
 // ----------------------------------------------------------------------------------------
 
 export type CoverLetterGenerationRequestInputs = {
 	extracted_job_posting_details: ExtractedJobPostingDetails;
 	resume_doc: UploadedDocument;
 	supporting_docs?: UploadedDocument[];
-	// browser_id: string;
 };
 
 export type CoverLetterGenerationResponse = {
@@ -79,7 +91,6 @@ export type ApplicationQuestionGenerationRequestInputs = {
 	supporting_docs?: UploadedDocument[];
 	additional_requirements?: string;
 	question: string;
-	// browser_id: string;
 };
 
 export type ApplicationQuestionAnswerResponse = {
@@ -97,4 +108,5 @@ export type FullSuggestionGeneration = {
 	location: string;
 	resume_suggestions: ResumeSuggestion[];
 	extracted_job_posting_details: ExtractedJobPostingDetails;
+	full_resume: FullResumeGenerationResponse;
 };

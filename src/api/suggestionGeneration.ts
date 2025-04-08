@@ -6,9 +6,10 @@ import type {
 	CoverLetterGenerationRequestInputs,
 	CoverLetterGenerationResponse,
 	ExtractedJobPostingDetails,
+	FullResumeGenerationResponse,
 	JobPostingEvalRequestInputs,
 	JobPostingEvalResultResponse,
-	ResumeSuggestionGenerationRequestInputs,
+	ResumeGenerationRequestInputs,
 	ResumeSuggestionsResponse,
 } from '@/types/suggestionGeneration';
 
@@ -56,7 +57,7 @@ export const generateResumeSuggestionRequest = async ({
 	extractedJobPostingDetails: ExtractedJobPostingDetails;
 	storedFilesObj: FilesStorageState;
 }) => {
-	const requestPayload: ResumeSuggestionGenerationRequestInputs = {
+	const requestPayload: ResumeGenerationRequestInputs = {
 		extracted_job_posting_details: extractedJobPostingDetails,
 		resume_doc: {
 			base64_content: storedFilesObj.resume!.base64Content,
@@ -86,6 +87,47 @@ export const generateResumeSuggestionRequest = async ({
 	// Parse and return the response
 	const responseData = await response.json();
 	return responseData as ResumeSuggestionsResponse;
+};
+
+// ----------------------------------------------------------------------------------------
+
+export const generateFullResumeRequest = async ({
+	extractedJobPostingDetails,
+	storedFilesObj,
+}: {
+	extractedJobPostingDetails: ExtractedJobPostingDetails;
+	storedFilesObj: FilesStorageState;
+}) => {
+	const requestPayload: ResumeGenerationRequestInputs = {
+		extracted_job_posting_details: extractedJobPostingDetails,
+		resume_doc: {
+			base64_content: storedFilesObj.resume!.base64Content,
+			file_type: storedFilesObj.resume!.fileType,
+			name: storedFilesObj.resume!.name,
+		},
+	};
+
+	if (storedFilesObj.supportingDocs.length > 0) {
+		requestPayload.supporting_docs = storedFilesObj.supportingDocs.map((doc) => ({
+			base64_content: doc.base64Content,
+			file_type: doc.fileType,
+			name: doc.name,
+		}));
+	}
+
+	const response = await fetch(`${DOMAIN_URL}/api/v1/generation/resume/generate`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(requestPayload),
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.detail);
+	}
+
+	const responseData = await response.json();
+	return responseData as FullResumeGenerationResponse;
 };
 
 // ----------------------------------------------------------------------------------------

@@ -43,7 +43,11 @@ const SuggestionTab = ({ fullSuggestionResults, storedFilesObj }: SuggestionTabP
 				</TabsList>
 
 				<TabsContent value='resume' className='flex-1 overflow-auto'>
-					<ResumeSuggestions suggestions={fullSuggestionResults.resume_suggestions} />
+					<ResumeSuggestions
+						suggestions={fullSuggestionResults.resume_suggestions}
+						fullResume={fullSuggestionResults.full_resume}
+						jobTitle={fullSuggestionResults.job_title_name}
+					/>
 				</TabsContent>
 
 				<TabsContent value='coverLetter' className='flex-1 overflow-auto'>

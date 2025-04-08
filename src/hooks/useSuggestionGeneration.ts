@@ -1,6 +1,7 @@
 import {
 	evaluateJobPostingPageRequest,
 	generateCoverLetterRequest,
+	generateFullResumeRequest,
 	generateResumeSuggestionRequest,
 } from '@/api/suggestionGeneration';
 import { getUserCredits } from '@/api/user';
@@ -167,7 +168,18 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 				storedFilesObj,
 			});
 
-			// STEP 3: Generate cover letter
+			// STEP 3: Generate full resume
+			setGenerationProgress({
+				stagePercentage: GenerationStage.GENERATING_FULL_RESUME,
+				message: 'Generating full tailored resume...',
+			});
+
+			const fullResumeResponseResult = await generateFullResumeRequest({
+				extractedJobPostingDetails: jobPostingEvaluationResponseResult.extracted_job_posting_details,
+				storedFilesObj,
+			});
+
+			// STEP 4: Generate cover letter
 			setGenerationProgress({
 				stagePercentage: GenerationStage.CREATING_COVER_LETTER,
 				message: 'Generating tailored cover letter...',
@@ -195,6 +207,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 				location: coverLetterResponseResult.location,
 				resume_suggestions: resumeSuggestionsResponseResult.resume_suggestions,
 				extracted_job_posting_details: jobPostingEvaluationResponseResult.extracted_job_posting_details,
+				full_resume: fullResumeResponseResult,
 			};
 
 			// after the entire process, we will call the setUserCredits to get the new currentCreditsCount to update usedCredits
