@@ -411,7 +411,7 @@ export const handleDownloadResumeDocx = async ({
 		// Create a temporary anchor element and trigger download
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = `${fullResume.applicant_name}_CoverLetter_${jobTitle}.docx`;
+		a.download = `${fullResume.applicant_name}_Resume_${jobTitle}.docx`;
 		a.click();
 
 		// Clean up
@@ -715,7 +715,7 @@ export const handleDownloadResumePdf = async ({
 		}
 
 		// Save the PDF
-		doc.save(`${fullResume.applicant_name}_CoverLetter_${jobTitle}.pdf`);
+		doc.save(`${fullResume.applicant_name}_Resume_${jobTitle}.pdf`);
 		return true;
 	} catch (error) {
 		console.error('Error generating PDF:', error);
