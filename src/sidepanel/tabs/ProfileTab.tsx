@@ -178,7 +178,7 @@ const ProfileTab = ({
 			</div>
 
 			{/* Job posting input content by user */}
-			<div className='space-y-2'>
+			{/* <div className='space-y-2'>
 				<div className='flex items-center justify-between'>
 					<label htmlFor='job content' className='text-xs font-medium text-gray-600'>
 						Job Posting Content *
@@ -199,13 +199,13 @@ const ProfileTab = ({
 					value={jobPostingContent}
 					onChange={(e) => setJobPostingContent(e.target.value)}
 				/>
-			</div>
+			</div> */}
 			{/* Generate Button */}
 			<Button
 				variant='default'
 				className='h-12 w-full hover:opacity-90'
 				onClick={onGenerateSuggestions}
-				disabled={isSuggestionGenerationPending || !storedFilesObj.resume || !jobPostingContent}
+				disabled={isSuggestionGenerationPending || !storedFilesObj.resume}
 			>
 				{isSuggestionGenerationPending ? (
 					<span className='flex items-center justify-center'>
