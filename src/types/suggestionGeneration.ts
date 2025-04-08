@@ -53,7 +53,7 @@ export type ResumeSection = {
 export type FullResumeGenerationResponse = {
 	applicant_name: string;
 	contact_info: string;
-	summary: string;
+	summary: string[];
 	skills: string[];
 	sections: ResumeSection[];
 	full_resume_text: string;

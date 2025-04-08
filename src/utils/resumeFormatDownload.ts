@@ -22,15 +22,7 @@ export const handleDownloadResumeDocx = async ({
 	jobTitle: string;
 }) => {
 	try {
-		// Parse summary into bullet points if it's not already
-		const summaryBullets = fullResume.summary.includes('•')
-			? fullResume.summary
-					.split('•')
-					.filter((item) => item.trim())
-					.map((item) => item.trim())
-			: [fullResume.summary];
-
-		// Create skills in a two-column format
+		// Get skills data ready for two-column format
 		const skillsCount = fullResume.skills.length;
 		const firstColumnCount = Math.ceil(skillsCount / 2);
 		const firstColumnSkills = fullResume.skills.slice(0, firstColumnCount);
@@ -57,7 +49,7 @@ export const handleDownloadResumeDocx = async ({
 							text: fullResume.contact_info,
 							alignment: AlignmentType.CENTER,
 							spacing: {
-								after: 400,
+								after: 600, // Increased spacing after contact info
 							},
 						}),
 
@@ -68,26 +60,19 @@ export const handleDownloadResumeDocx = async ({
 							spacing: {
 								after: 200,
 							},
-							border: {
-								bottom: {
-									color: '#000000',
-									space: 1,
-									style: BorderStyle.SINGLE,
-									size: 1,
-								},
-							},
+							// No border/underline for major section headers
 						}),
 
-						// Summary as bullet points
-						...summaryBullets.map(
-							(bullet) =>
+						// Summary as bullet points from array
+						...fullResume.summary.map(
+							(summaryPoint) =>
 								new Paragraph({
 									children: [
 										new TextRun({
 											text: '• ',
 										}),
 										new TextRun({
-											text: bullet,
+											text: summaryPoint,
 										}),
 									],
 									spacing: {
@@ -96,6 +81,13 @@ export const handleDownloadResumeDocx = async ({
 								}),
 						),
 
+						// Add extra space after summary section
+						new Paragraph({
+							spacing: {
+								after: 400, // Increased spacing after summary section
+							},
+						}),
+
 						// Skills Header
 						new Paragraph({
 							text: 'SKILLS',
@@ -103,14 +95,7 @@ export const handleDownloadResumeDocx = async ({
 							spacing: {
 								after: 200,
 							},
-							border: {
-								bottom: {
-									color: '#000000',
-									space: 1,
-									style: BorderStyle.SINGLE,
-									size: 1,
-								},
-							},
+							// No border/underline for major section headers
 						}),
 
 						// Skills in two columns using a table
@@ -183,7 +168,7 @@ export const handleDownloadResumeDocx = async ({
 						new Paragraph({
 							text: '',
 							spacing: {
-								after: 200,
+								after: 400, // Increased spacing after skills section
 							},
 						}),
 
@@ -192,27 +177,29 @@ export const handleDownloadResumeDocx = async ({
 							// Check if this is the Work Experience section
 							const isWorkExperience = section.title.toLowerCase().includes('experience');
 
-							if (isWorkExperience) {
-								// Format work experience specially
-								// First add the section header
-								const sectionElements = [
-									new Paragraph({
-										text: section.title.toUpperCase(),
-										heading: HeadingLevel.HEADING_2,
-										spacing: {
-											after: 200,
-										},
-										border: {
-											bottom: {
-												color: '#000000',
-												space: 1,
-												style: BorderStyle.SINGLE,
-												size: 1,
-											},
-										},
-									}),
-								];
+							// First add the section header
+							const sectionElements = [
+								new Paragraph({
+									text: section.title.toUpperCase(),
+									heading: HeadingLevel.HEADING_2,
+									spacing: {
+										after: 200,
+									},
+									// Only add border for work experience sections
+									border: isWorkExperience
+										? {
+												bottom: {
+													color: '#CCCCCC', // Light gray color
+													space: 1,
+													style: BorderStyle.SINGLE,
+													size: 1,
+												},
+											}
+										: undefined,
+								}),
+							];
 
+							if (isWorkExperience) {
 								// Split experience blocks and process each job
 								const experienceBlocks = section.content.split(/\n\s*\n/);
 
@@ -327,6 +314,23 @@ export const handleDownloadResumeDocx = async ({
 												spacing: {
 													after: 200,
 												},
+												border: {
+													bottom: {
+														color: '#CCCCCC', // Light gray color for the line
+														space: 1,
+														style: BorderStyle.SINGLE,
+														size: 1,
+													},
+												},
+											}),
+										);
+
+										// Add extra space after the separator
+										sectionElements.push(
+											new Paragraph({
+												spacing: {
+													after: 200,
+												},
 											}),
 										);
 									}
@@ -334,7 +338,7 @@ export const handleDownloadResumeDocx = async ({
 
 								return sectionElements;
 							} else {
-								// For other sections, process normally but with added border to header
+								// For other sections, process normally but without border
 								return [
 									new Paragraph({
 										text: section.title.toUpperCase(),
@@ -342,14 +346,7 @@ export const handleDownloadResumeDocx = async ({
 										spacing: {
 											after: 200,
 										},
-										border: {
-											bottom: {
-												color: '#000000',
-												space: 1,
-												style: BorderStyle.SINGLE,
-												size: 1,
-											},
-										},
+										// No border for non-work experience sections
 									}),
 									...section.content.split('\n').map((line) => {
 										const trimmedLine = line.trim();
@@ -389,9 +386,10 @@ export const handleDownloadResumeDocx = async ({
 											});
 										}
 									}),
+									// Add extra space after each section
 									new Paragraph({
 										spacing: {
-											after: 200,
+											after: 400, // Increased spacing after sections
 										},
 									}),
 								];
@@ -432,14 +430,6 @@ export const handleDownloadResumePdf = async ({
 	jobTitle: string;
 }) => {
 	try {
-		// Parse summary into bullet points if it's not already
-		const summaryBullets = fullResume.summary.includes('•')
-			? fullResume.summary
-					.split('•')
-					.filter((item) => item.trim())
-					.map((item) => item.trim())
-			: [fullResume.summary];
-
 		// Create new PDF document
 		const doc = new jsPDF({
 			orientation: 'portrait',
@@ -466,50 +456,39 @@ export const handleDownloadResumePdf = async ({
 		doc.setFont('Helvetica', 'normal');
 		doc.setFontSize(10);
 		doc.text(fullResume.contact_info, pageWidth / 2, yPos, { align: 'center' });
-		yPos += 12;
+		yPos += 15; // Increased spacing after contact info
 
 		// Professional Summary
 		doc.setFont('Helvetica', 'bold');
 		doc.setFontSize(12);
 		doc.text('PROFESSIONAL SUMMARY', margin, yPos);
-		yPos += 1;
-
-		// Add horizontal line
-		doc.setDrawColor(0);
-		doc.setLineWidth(0.2);
-		doc.line(margin, yPos + 2, pageWidth - margin, yPos + 2);
-		yPos += 6;
+		yPos += 6; // Increased spacing after section title
 
 		// Add summary as bullet points
 		doc.setFont('Helvetica', 'normal');
 		doc.setFontSize(10);
 
-		summaryBullets.forEach((bullet) => {
+		// Handle summary as an array of strings
+		for (const summaryPoint of fullResume.summary) {
 			// Check if we need a new page
 			if (yPos > pageHeight - margin) {
 				doc.addPage();
 				yPos = margin;
 			}
 
-			const bulletText = '• ' + bullet;
+			const bulletText = '• ' + summaryPoint;
 			const wrappedText = doc.splitTextToSize(bulletText, contentWidth);
 			doc.text(wrappedText, margin, yPos);
 			yPos += wrappedText.length * 5;
-		});
+		}
 
-		yPos += 4; // Add space after summary
+		yPos += 8; // Increased spacing after summary section
 
 		// Skills header
 		doc.setFont('Helvetica', 'bold');
 		doc.setFontSize(12);
 		doc.text('SKILLS', margin, yPos);
-		yPos += 1;
-
-		// Add horizontal line
-		doc.setDrawColor(0);
-		doc.setLineWidth(0.2);
-		doc.line(margin, yPos + 2, pageWidth - margin, yPos + 2);
-		yPos += 6;
+		yPos += 6; // Increased spacing after section title
 
 		// Format skills in two columns
 		doc.setFont('Helvetica', 'normal');
@@ -553,7 +532,7 @@ export const handleDownloadResumePdf = async ({
 		}
 
 		// Set yPos to the highest of the two columns
-		yPos = Math.max(leftColYPos, rightColYPos) + 4;
+		yPos = Math.max(leftColYPos, rightColYPos) + 10; // Increased spacing after skills section
 
 		// Add each section
 		for (const section of fullResume.sections) {
@@ -567,17 +546,18 @@ export const handleDownloadResumePdf = async ({
 			doc.setFont('Helvetica', 'bold');
 			doc.setFontSize(12);
 			doc.text(section.title.toUpperCase(), margin, yPos);
-			yPos += 1;
+			yPos += 6; // Consistent spacing after section title
 
-			// Add horizontal line
-			doc.setDrawColor(0);
-			doc.setLineWidth(0.2);
-			doc.line(margin, yPos + 2, pageWidth - margin, yPos + 2);
-			yPos += 6;
+			// Only add horizontal line for work experience section
+			const isWorkExperience = section.title.toLowerCase().includes('experience');
+			if (isWorkExperience) {
+				// Add horizontal line
+				doc.setDrawColor(200); // Light gray color
+				doc.setLineWidth(0.2);
+				doc.line(margin, yPos - 2, pageWidth - margin, yPos - 2); // Full width line
+			}
 
 			// Check if this is work experience to format specially
-			const isWorkExperience = section.title.toLowerCase().includes('experience');
-
 			if (isWorkExperience) {
 				// Split into job blocks
 				const experienceBlocks = section.content.split(/\n\s*\n/);
@@ -672,12 +652,12 @@ export const handleDownloadResumePdf = async ({
 						// Add a light separator line
 						if (yPos < pageHeight - margin) {
 							// Only if there's room
-							doc.setDrawColor(200);
+							doc.setDrawColor(200); // Light gray color
 							doc.setLineWidth(0.1);
-							doc.line(margin + 10, yPos - 2, pageWidth - margin - 10, yPos - 2);
+							doc.line(margin, yPos - 2, pageWidth - margin, yPos - 2); // Full width line
 						}
 
-						yPos += 4;
+						yPos += 6; // Increased spacing between job entries
 					}
 				}
 			} else {
@@ -711,7 +691,7 @@ export const handleDownloadResumePdf = async ({
 				}
 			}
 
-			yPos += 6; // Add space after each section
+			yPos += 10; // Increased spacing after each section
 		}
 
 		// Save the PDF
