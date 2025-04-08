@@ -231,7 +231,14 @@ const ProfileTab = ({
 			<div className='flex-grow'></div>
 
 			{/* Credit Manager */}
-			<CreditManager browserId={browserId} credits={credits} />
+			{credits ? (
+				<CreditManager browserId={browserId} credits={credits} />
+			) : (
+				<div className='flex h-10 items-center justify-center'>
+					<div className='h-5 w-5 animate-spin rounded-full border-2 border-gray-500 border-t-transparent' />
+					<p className='ml-5 text-sm'>loading your credits</p>
+				</div>
+			)}
 
 			{/* Your Feedback & Rant Button at the very bottom */}
 			<Button

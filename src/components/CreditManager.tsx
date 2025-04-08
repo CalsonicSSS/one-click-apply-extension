@@ -44,7 +44,7 @@ export function CreditManager({ browserId, credits }: { browserId: string | null
 							disabled={loading}
 							className='flex flex-col p-4'
 						>
-							<span className='text-md font-semibold'>{pkg.credits} Credits</span>
+							<span className='text-sm font-semibold'>Get {pkg.credits} Credits</span>
 						</Button>
 					))}
 				</div>
