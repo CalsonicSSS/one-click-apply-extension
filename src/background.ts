@@ -39,6 +39,8 @@ chrome.action.onClicked.addListener((tab) => {
 	}
 });
 
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
 // Initialize all tabs to have side panel disabled by default
 // onInstalled: listens for when the extension is installed, updated, or when Chrome is updated to a new version.
 // typically to perform setup or initalized related tasks like initializing storage, default starting setting.
@@ -48,6 +50,8 @@ chrome.runtime.onInstalled.addListener(() => {
 		enabled: false,
 	});
 });
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // Make sure new tabs start with disabled side panel
 chrome.tabs.onCreated.addListener((tab) => {
@@ -59,14 +63,7 @@ chrome.tabs.onCreated.addListener((tab) => {
 	}
 });
 
-// Clean up panel stored data when tabs are closed
-chrome.tabs.onRemoved.addListener((tabId) => {
-	// If this tab had an active panel, clean up its data
-	if (activePanelTabs.has(tabId)) {
-		cleanupTabSpecificStoredGenData(tabId);
-		activePanelTabs.delete(tabId);
-	}
-});
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // this is to clean up tabSuggestions / tabApplicationQuestions data stored in current specific tab
 // fileStorage and used creadit count are user specific and should persist even if the tab is closed (the CRUD are handled directly by user interaction)
@@ -92,6 +89,17 @@ async function cleanupTabSpecificStoredGenData(tabId: number) {
 		console.error('Error cleaning up tab data:', error);
 	}
 }
+
+// Clean up panel stored data when tabs are closed
+chrome.tabs.onRemoved.addListener((tabId) => {
+	// If this tab had an active panel, clean up its data
+	if (activePanelTabs.has(tabId)) {
+		cleanupTabSpecificStoredGenData(tabId);
+		activePanelTabs.delete(tabId);
+	}
+});
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // Listen for the refreshCredits message from the success page
 chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {

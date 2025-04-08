@@ -21,7 +21,7 @@ export const evaluateJobPostingPageRequest = async ({
 }) => {
 	// create post request payload
 	const requestPayload: JobPostingEvalRequestInputs = {
-		raw_job_html_content: jobPostingPageContent,
+		job_posting_content: jobPostingPageContent,
 		browser_id: browserId,
 	};
 

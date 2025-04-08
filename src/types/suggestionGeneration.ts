@@ -17,7 +17,7 @@ export type ExtractedJobPostingDetails = {
 };
 
 export type JobPostingEvalRequestInputs = {
-	raw_job_html_content: string;
+	job_posting_content: string;
 	browser_id: string;
 };
 

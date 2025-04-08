@@ -105,7 +105,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 		loadTabSpecificSuggestion();
 	}, [currentTabId]);
 
-	// Listen for messages from the background script to refresh credits after user purchases
+	// Listen for messages from the background script to refresh credits after user purchases navigate to success url page
 	useEffect(() => {
 		function handleCreditUpdate(message) {
 			if (message.action === 'creditUpdateRequired' && browserId) {
