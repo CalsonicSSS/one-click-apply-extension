@@ -12,14 +12,38 @@
 // use the chrome.sidePanel.setOptions() API, you can control which pages/tabs the panel appears on.
 export { currentUrl };
 
-// we will keep track of which tabs have the side panel enabled (later is used for the purpose of data-cleanup when specific tabs are closed on the chrome browser)
-const activePanelTabs: Set<number> = new Set();
+let currentUrl: string = '';
 
-let currentUrl: string | undefined = undefined;
+// Fires when user switches tabs
+chrome.tabs.onActivated.addListener((activeInfo) => {
+	chrome.tabs.get(activeInfo.tabId, (tab) => {
+		if (tab.url) currentUrl = tab.url;
+	});
+});
+
+// Fires when tab URL is updated (e.g., navigation or reload)
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+	if (tab.active && changeInfo.url) {
+		currentUrl = changeInfo.url;
+	}
+});
+
+// Respond to requests for currentUrl
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+	if (message.action === 'getCurrentUrl') {
+		sendResponse({ url: currentUrl });
+	}
+});
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // chrome.action refers to the extension's browser action (toolbar icon) | onClicked is an event triggered when the user clicks the extension icon.
 // The callback function receives the currently active tab (tab) as an argument. includes the id of the active tab
 // this becomes tab specific management now
+
+// we will keep track of which tabs have the side panel enabled (later is used for the purpose of data-cleanup when specific tabs are closed on the chrome browser)
+const activePanelTabs: Set<number> = new Set();
+
 chrome.action.onClicked.addListener((tab) => {
 	if (!tab?.id) return;
 
@@ -66,10 +90,6 @@ chrome.tabs.onCreated.addListener((tab) => {
 });
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
-
-chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-	currentUrl = tabs[0].url;
-});
 
 // this is to clean up tabSuggestions / tabApplicationQuestions data stored in current specific tab
 // fileStorage and used creadit count are user specific and should persist even if the tab is closed (the CRUD are handled directly by user interaction)

@@ -23,8 +23,8 @@ const SidePanelMain = () => {
 			isPending: isSuggestionGenerationPending,
 			mutate: suggestionGenerationMutate,
 		},
-		setJobPostingContent,
-		jobPostingContent,
+		// setJobPostingContent,
+		// jobPostingContent,
 	} = useSuggestionGeneration(storedFilesObj);
 
 	// Switch to suggestion tab when new results are available
@@ -73,8 +73,8 @@ const SidePanelMain = () => {
 						generationProgress={generationProgress}
 						browserId={browserId}
 						credits={credits}
-						setJobPostingContent={setJobPostingContent}
-						jobPostingContent={jobPostingContent}
+						// setJobPostingContent={setJobPostingContent}
+						// jobPostingContent={jobPostingContent}
 					/>
 				</TabsContent>
 

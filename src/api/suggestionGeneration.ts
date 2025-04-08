@@ -13,17 +13,17 @@ import type {
 } from '@/types/suggestionGeneration';
 
 export const evaluateJobPostingPageRequest = async ({
-	jobPostingPageContent,
+	// jobPostingPageContent,
 	browserId,
 	websiteUrl,
 }: {
-	jobPostingPageContent: string;
+	// jobPostingPageContent: string;
 	browserId: string;
-	websiteUrl?: string;
+	websiteUrl: string;
 }) => {
 	// create post request payload
 	const requestPayload: JobPostingEvalRequestInputs = {
-		job_posting_content: jobPostingPageContent,
+		// job_posting_content: jobPostingPageContent,
 		browser_id: browserId,
 		website_url: websiteUrl,
 	};

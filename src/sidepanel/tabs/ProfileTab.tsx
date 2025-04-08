@@ -2,11 +2,10 @@ import { CreditManager } from '@/components/CreditManager';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import GenerationProgressBar from '@/components/GenerationProgressBar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { FilesStorageState } from '@/types/fileManagement';
 import { GenerationStage, type GenerationProgress } from '@/types/progressTracking';
-import { HelpCircle, Trash2, Upload } from 'lucide-react';
+import { Trash2, Upload } from 'lucide-react';
 import { useRef, type ChangeEvent } from 'react';
 
 type ProfileTabProps = {
@@ -22,8 +21,8 @@ type ProfileTabProps = {
 	generationProgress: GenerationProgress | null;
 	browserId: string | null;
 	credits: null | number;
-	jobPostingContent: string;
-	setJobPostingContent: React.Dispatch<React.SetStateAction<string>>;
+	// jobPostingContent: string;
+	// setJobPostingContent: React.Dispatch<React.SetStateAction<string>>;
 };
 
 const ProfileTab = ({
@@ -39,8 +38,8 @@ const ProfileTab = ({
 	generationProgress,
 	browserId,
 	credits,
-	jobPostingContent,
-	setJobPostingContent,
+	// jobPostingContent,
+	// setJobPostingContent,
 }: ProfileTabProps) => {
 	const resumeInputRef = useRef<HTMLInputElement>(null);
 	const supportingInputRef = useRef<HTMLInputElement>(null);
@@ -172,7 +171,7 @@ const ProfileTab = ({
 				{!storedFilesObj.resume && storedFilesObj.supportingDocs.length === 0 && (
 					<div className='py-10 text-center text-gray-500'>
 						<p className='text-sm'>No documents uploaded yet</p>
-						<p className='mt-1 font-bold'>Upload your resume to get started</p>
+						<p className='mt-1 font-bold'>Upload your base resume to get started</p>
 					</div>
 				)}
 			</div>
@@ -200,12 +199,13 @@ const ProfileTab = ({
 					onChange={(e) => setJobPostingContent(e.target.value)}
 				/>
 			</div> */}
+
 			{/* Generate Button */}
 			<Button
 				variant='default'
 				className='h-12 w-full hover:opacity-90'
 				onClick={onGenerateSuggestions}
-				disabled={isSuggestionGenerationPending || !storedFilesObj.resume}
+				disabled={isSuggestionGenerationPending || !storedFilesObj.resume || !credits}
 			>
 				{isSuggestionGenerationPending ? (
 					<span className='flex items-center justify-center'>

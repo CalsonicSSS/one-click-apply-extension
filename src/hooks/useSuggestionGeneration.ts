@@ -10,7 +10,6 @@ import type { FullSuggestionGeneration } from '@/types/suggestionGeneration';
 import { generateBrowserId } from '@/utils/browser';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { currentUrl } from '@/background';
 // the useSuggestionGeneration mainly responsible for handling states of allSuggestions and tabSpecificLatestFullSuggestion and suggestion generation process
 // which also involves other highly related state: currentTabId, credits, browserId (for user identification), generationProgress
 // we directly instansitate and manage here as they are working with the whole suggestion gen process here
@@ -147,10 +146,14 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 			});
 
 			// const pageExtractedContent = await extractPageContentFromActiveTab();
+			const response = await chrome.runtime.sendMessage({
+				action: 'getCurrentUrl',
+			});
+
 			const jobPostingEvaluationResponseResult = await evaluateJobPostingPageRequest({
-				jobPostingPageContent: jobPostingContent,
+				// jobPostingPageContent: jobPostingContent,
 				browserId,
-				websiteUrl: currentUrl,
+				websiteUrl: response.url,
 			});
 
 			// STEP 2: Generate resume suggestions
