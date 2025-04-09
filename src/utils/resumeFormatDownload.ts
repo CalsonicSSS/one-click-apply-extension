@@ -87,8 +87,8 @@ export const handleDownloadResumeDocx = async ({
 										after: 120,
 									},
 									indent: {
-										left: 360, // 0.5 inch left indent (720 twips)
-										hanging: 360, // 0.25 inch hanging indent (360 twips)
+										left: 120,
+										hanging: 120,
 									},
 								}),
 						),
@@ -151,8 +151,8 @@ export const handleDownloadResumeDocx = async ({
 															after: 120,
 														},
 														indent: {
-															left: 360,
-															hanging: 360,
+															left: 120,
+															hanging: 120,
 														},
 													}),
 											),
@@ -177,8 +177,8 @@ export const handleDownloadResumeDocx = async ({
 															after: 120,
 														},
 														indent: {
-															left: 360,
-															hanging: 360,
+															left: 120,
+															hanging: 120,
 														},
 													}),
 											),
@@ -312,8 +312,8 @@ export const handleDownloadResumeDocx = async ({
 													text: line,
 													spacing: { after: 120 },
 													indent: {
-														left: 360,
-														hanging: 360,
+														left: 120,
+														hanging: 120,
 													},
 												}),
 											);
@@ -326,8 +326,8 @@ export const handleDownloadResumeDocx = async ({
 													],
 													spacing: { after: 120 },
 													indent: {
-														left: 360,
-														hanging: 360,
+														left: 120,
+														hanging: 120,
 													},
 												}),
 											);
@@ -396,8 +396,8 @@ export const handleDownloadResumeDocx = async ({
 												text: trimmedLine,
 												spacing: { after: 120 },
 												indent: {
-													left: 360,
-													hanging: 360,
+													left: 120,
+													hanging: 120,
 												},
 											});
 										} else {
@@ -408,8 +408,8 @@ export const handleDownloadResumeDocx = async ({
 												],
 												spacing: { after: 120 },
 												indent: {
-													left: 360,
-													hanging: 360,
+													left: 120,
+													hanging: 120,
 												},
 											});
 										}
