@@ -31,3 +31,6 @@ dist/
 
 # typescript
 .tsbuildinfo
+
+# additional files
+action.txt

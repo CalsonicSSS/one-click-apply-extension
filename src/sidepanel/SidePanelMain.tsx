@@ -48,8 +48,8 @@ const SidePanelMain = () => {
 		<div className='flex h-screen w-full flex-col bg-white'>
 			{/* Header */}
 			<div className='p-4'>
-				{/* current changing UI title name to "Ninja craft" */}
-				<h1 className='text-2xl font-bold text-gray-900'>Ninja Craft</h1>
+				{/* current changing UI title name to "One-click craft" */}
+				<h1 className='text-2xl font-bold text-gray-900'>One-click Craft</h1>
 				<p className='text-sm text-gray-500'>Get tailored resume & CV, just one click away</p>
 			</div>
 

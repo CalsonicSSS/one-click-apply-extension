@@ -10,8 +10,8 @@ type CreditPackage = {
 };
 
 export const CREDIT_PACKAGES: Record<string, CreditPackage> = {
-	'25': { credits: 25, price: 3.99 },
-	'65': { credits: 65, price: 7.99 },
+	'20': { credits: 20, price: 3.99 },
+	'50': { credits: 50, price: 7.99 },
 };
 
 export const FREE_TIER_USER_CREDIT_COUNT = 10;
