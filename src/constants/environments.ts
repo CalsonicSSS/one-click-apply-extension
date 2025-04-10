@@ -2,7 +2,7 @@
 const DEV_DOMAIN = 'http://localhost:8000';
 const PROD_DOMAIN = 'https://wise-craft-server.onrender.com';
 
-export const DOMAIN_URL = PROD_DOMAIN;
+export const DOMAIN_URL = DEV_DOMAIN;
 
 type CreditPackage = {
 	credits: number;

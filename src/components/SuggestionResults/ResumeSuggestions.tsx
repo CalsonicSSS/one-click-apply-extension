@@ -11,13 +11,13 @@ import { useState } from 'react';
 
 type ResumeSuggestionsProps = {
 	suggestions: ResumeSuggestion[];
-	fullResume?: FullResumeGenerationResponse;
+	fullResume: FullResumeGenerationResponse;
 	jobTitle: string;
 };
 
 const ResumeSuggestions = ({ suggestions, fullResume, jobTitle }: ResumeSuggestionsProps) => {
 	const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-	const [copied, setCopied] = useState(false);
+	// const [copied, setCopied] = useState(false);
 	const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 	const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
 
@@ -27,13 +27,13 @@ const ResumeSuggestions = ({ suggestions, fullResume, jobTitle }: ResumeSuggesti
 		setTimeout(() => setCopiedIndex(null), 2000);
 	};
 
-	const handleCopyFullResume = () => {
-		if (fullResume) {
-			navigator.clipboard.writeText(fullResume.full_resume_text);
-			setCopied(true);
-			setTimeout(() => setCopied(false), 2000);
-		}
-	};
+	// const handleCopyFullResume = () => {
+	// 	if (fullResume) {
+	// 		navigator.clipboard.writeText(fullResume.full_resume_text);
+	// 		setCopied(true);
+	// 		setTimeout(() => setCopied(false), 2000);
+	// 	}
+	// };
 
 	const onDownloadDocx = async () => {
 		if (!fullResume) return;
@@ -65,23 +65,6 @@ const ResumeSuggestions = ({ suggestions, fullResume, jobTitle }: ResumeSuggesti
 					<div className='mb-3 flex items-center justify-between'>
 						<h3 className='text-sm font-medium'>Download Full Tailored Resume</h3>
 						<div className='flex space-x-2'>
-							<button
-								className='flex items-center rounded-md bg-white p-1.5 text-xs hover:bg-gray-100'
-								onClick={handleCopyFullResume}
-							>
-								{copied ? (
-									<>
-										<CheckCircle className='mr-1 h-3.5 w-3.5 text-green-500' />
-										<span>Copied!</span>
-									</>
-								) : (
-									<>
-										<Copy className='mr-1 h-3.5 w-3.5' />
-										<span>Copy</span>
-									</>
-								)}
-							</button>
-
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
 									<button className='flex items-center rounded-md bg-white p-1.5 text-xs hover:bg-gray-100'>

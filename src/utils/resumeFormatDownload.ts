@@ -375,23 +375,19 @@ export const handleDownloadResumeDocx = async ({
 											});
 										}
 
-										const isSchoolName =
+										// Update this condition to better handle the new education format
+										// This replaces the existing isSchoolName check with a more robust one
+										const isEducationHeaderLine =
 											isEducation &&
-											!trimmedLine.startsWith('•') &&
-											!trimmedLine.startsWith('-') &&
-											!trimmedLine.startsWith('*') &&
-											!trimmedLine.match(
-												/^(bachelor|master|phd|doctor|associate|b\.s\.|m\.s\.|b\.a\.|m\.a\.|ph\.d\.|gpa|course|degree|certificate)/i,
-											) &&
-											(lineIndex === 0 ||
-												section.content.split('\n')[lineIndex - 1].trim() === '');
+											lineIndex === 0 && // First line of a block
+											trimmedLine.includes('|'); // Has pipe separator
 
 										if (
 											trimmedLine.startsWith('•') ||
 											trimmedLine.startsWith('-') ||
-											trimmedLine.startsWith('*') ||
-											isSchoolName
+											trimmedLine.startsWith('*')
 										) {
+											// This is a bullet point - keep as is
 											return new Paragraph({
 												text: trimmedLine,
 												spacing: { after: 120 },
@@ -400,18 +396,67 @@ export const handleDownloadResumeDocx = async ({
 													hanging: 120,
 												},
 											});
+										} else if (isEducationHeaderLine) {
+											// This is an education header line with pipe separators
+											// Process similar to work experience headers
+											const parts = trimmedLine.split('|');
+
+											if (parts.length >= 2) {
+												const degree = parts[0].trim();
+												const timespan = parts.length > 2 ? parts[2].trim() : parts[1].trim();
+
+												return new Paragraph({
+													children: [
+														new TextRun({
+															text: degree,
+															bold: true,
+														}),
+														new TextRun({
+															text: ' ' + timespan,
+															bold: true,
+														}),
+													],
+													spacing: {
+														after: 100,
+													},
+												});
+											} else {
+												// Fallback for improperly formatted education header
+												return new Paragraph({
+													text: trimmedLine,
+													// bold: true,
+													spacing: { after: 120 },
+												});
+											}
 										} else {
-											return new Paragraph({
-												children: [
-													new TextRun({ text: '• ' }),
-													new TextRun({ text: trimmedLine }),
-												],
-												spacing: { after: 120 },
-												indent: {
-													left: 120,
-													hanging: 120,
-												},
-											});
+											// For institution name or other non-bullet details in education
+											// If it's the second line of an education block and follows a header with pipes
+											if (
+												isEducation &&
+												lineIndex === 1 &&
+												section.content.split('\n')[0].includes('|')
+											) {
+												// This is likely the institution name if not a bullet
+												return new Paragraph({
+													text: trimmedLine,
+													spacing: {
+														after: 150,
+													},
+												});
+											} else {
+												// Other lines - format as bullets for consistency
+												return new Paragraph({
+													children: [
+														new TextRun({ text: '• ' }),
+														new TextRun({ text: trimmedLine }),
+													],
+													spacing: { after: 120 },
+													indent: {
+														left: 120,
+														hanging: 120,
+													},
+												});
+											}
 										}
 									}),
 									// Add extra space after each section

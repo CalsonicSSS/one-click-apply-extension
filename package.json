@@ -53,9 +53,6 @@
 			"tabs",
 			"activeTab"
 		],
-		"host_permissions": [
-			"https://*/*"
-		],
 		"action": {
 			"default_title": "Open One-Click Craft"
 		},
