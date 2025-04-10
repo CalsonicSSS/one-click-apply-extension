@@ -7,7 +7,7 @@ import {
 import { getUserCredits } from '@/api/user';
 import type { FilesStorageState } from '@/types/fileManagement';
 import { GenerationStage, type GenerationProgress } from '@/types/progressTracking';
-import type { FullSuggestionGeneration } from '@/types/suggestionGeneration';
+import type { FullSuggestionGeneration, JobPostingEvalResultResponse } from '@/types/suggestionGeneration';
 import { generateBrowserId } from '@/utils/browser';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -146,16 +146,23 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 				message: 'Analyzing job posting content...',
 			});
 
-			// const pageExtractedContent = await extractPageContentFromActiveTab();
+			let jobPostingEvaluationResponseResult: JobPostingEvalResultResponse;
+
 			const response = await chrome.runtime.sendMessage({
 				action: 'getCurrentUrl',
 			});
 
-			const jobPostingEvaluationResponseResult = await evaluateJobPostingPageRequest({
-				// jobPostingPageContent: jobPostingContent,
-				browserId,
-				websiteUrl: response.url,
-			});
+			// If jobPostingContent is set (manual input), use that
+			if (jobPostingContent) {
+				jobPostingEvaluationResponseResult = await evaluateJobPostingPageRequest({
+					jobPostingContent,
+				});
+			} else {
+				// If no manual content, try URL scraping
+				jobPostingEvaluationResponseResult = await evaluateJobPostingPageRequest({
+					websiteUrl: response.url,
+				});
+			}
 
 			// STEP 2: Generate resume suggestions
 			setGenerationProgress({
@@ -186,6 +193,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 			});
 
 			const coverLetterResponseResult = await generateCoverLetterRequest({
+				browserId,
 				extractedJobPostingDetails: jobPostingEvaluationResponseResult.extracted_job_posting_details,
 				storedFilesObj,
 			});

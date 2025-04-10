@@ -2,6 +2,7 @@ import { CreditManager } from '@/components/CreditManager';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import GenerationProgressBar from '@/components/GenerationProgressBar';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { FilesStorageState } from '@/types/fileManagement';
 import { GenerationStage, type GenerationProgress } from '@/types/progressTracking';
@@ -21,8 +22,8 @@ type ProfileTabProps = {
 	generationProgress: GenerationProgress | null;
 	browserId: string | null;
 	credits: null | number;
-	// jobPostingContent: string;
-	// setJobPostingContent: React.Dispatch<React.SetStateAction<string>>;
+	jobPostingContent: string;
+	setJobPostingContent: React.Dispatch<React.SetStateAction<string>>;
 };
 
 const ProfileTab = ({
@@ -38,8 +39,8 @@ const ProfileTab = ({
 	generationProgress,
 	browserId,
 	credits,
-	// jobPostingContent,
-	// setJobPostingContent,
+	jobPostingContent,
+	setJobPostingContent,
 }: ProfileTabProps) => {
 	const resumeInputRef = useRef<HTMLInputElement>(null);
 	const supportingInputRef = useRef<HTMLInputElement>(null);
@@ -177,28 +178,23 @@ const ProfileTab = ({
 			</div>
 
 			{/* Job posting input content by user */}
-			{/* <div className='space-y-2'>
-				<div className='flex items-center justify-between'>
-					<label htmlFor='job content' className='text-xs font-medium text-gray-600'>
-						Job Posting Content *
-					</label>
-					<TooltipProvider delayDuration={300}>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<HelpCircle className='h-4 w-4 text-gray-400' />
-							</TooltipTrigger>
-							<TooltipContent side='top' align='center'>
-								<p className='max-w-xs text-xs'>Paste job content here to get started! 🚀</p>
-							</TooltipContent>
-						</Tooltip>
-					</TooltipProvider>
+			{isSuggestionGenerationError && suggestionGenerationError?.message === 'firecrawl error' && (
+				<div className='space-y-2'>
+					<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
+						Unable to scrape the job content on this site 😱 Let's paste the job posting content below 💪
+					</div>
+					<div className='flex items-center justify-between'>
+						<label htmlFor='job content' className='text-xs font-medium text-gray-600'>
+							Job Posting Content *
+						</label>
+					</div>
+					<Input
+						id='job content'
+						value={jobPostingContent}
+						onChange={(e) => setJobPostingContent(e.target.value)}
+					/>
 				</div>
-				<Input
-					id='job content'
-					value={jobPostingContent}
-					onChange={(e) => setJobPostingContent(e.target.value)}
-				/>
-			</div> */}
+			)}
 
 			{/* Generate Button */}
 			<Button
@@ -217,10 +213,10 @@ const ProfileTab = ({
 				)}
 			</Button>
 
-			{/* Suggestion generation error */}
-			{isSuggestionGenerationError && (
+			{/* Suggestion generation error (For non firecrawl related error) */}
+			{isSuggestionGenerationError && suggestionGenerationError?.message !== 'firecrawl error' && (
 				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
-					{suggestionGenerationError.message}
+					{suggestionGenerationError?.message}
 				</div>
 			)}
 

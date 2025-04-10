@@ -17,9 +17,8 @@ export type ExtractedJobPostingDetails = {
 };
 
 export type JobPostingEvalRequestInputs = {
-	// job_posting_content: string;
-	browser_id: string;
-	website_url: string;
+	job_posting_content?: string;
+	website_url?: string;
 };
 
 export type JobPostingEvalResultResponse = {
@@ -65,6 +64,7 @@ export type CoverLetterGenerationRequestInputs = {
 	extracted_job_posting_details: ExtractedJobPostingDetails;
 	resume_doc: UploadedDocument;
 	supporting_docs?: UploadedDocument[];
+	browser_id: string;
 };
 
 export type CoverLetterGenerationResponse = {

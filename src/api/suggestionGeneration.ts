@@ -14,19 +14,16 @@ import type {
 } from '@/types/suggestionGeneration';
 
 export const evaluateJobPostingPageRequest = async ({
-	// jobPostingPageContent,
-	browserId,
 	websiteUrl,
+	jobPostingContent,
 }: {
-	// jobPostingPageContent: string;
-	browserId: string;
-	websiteUrl: string;
+	websiteUrl?: string;
+	jobPostingContent?: string;
 }) => {
 	// create post request payload
 	const requestPayload: JobPostingEvalRequestInputs = {
-		// job_posting_content: jobPostingPageContent,
-		browser_id: browserId,
 		website_url: websiteUrl,
+		job_posting_content: jobPostingContent,
 	};
 
 	// all errors are handled on server side by fastapi
@@ -135,11 +132,14 @@ export const generateFullResumeRequest = async ({
 export const generateCoverLetterRequest = async ({
 	extractedJobPostingDetails,
 	storedFilesObj,
+	browserId,
 }: {
 	extractedJobPostingDetails: ExtractedJobPostingDetails;
 	storedFilesObj: FilesStorageState;
+	browserId: string;
 }) => {
 	const requestPayload: CoverLetterGenerationRequestInputs = {
+		browser_id: browserId,
 		extracted_job_posting_details: extractedJobPostingDetails,
 		resume_doc: {
 			base64_content: storedFilesObj.resume!.base64Content,

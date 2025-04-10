@@ -227,83 +227,100 @@ export const handleDownloadResumeDocx = async ({
 								}),
 							];
 
-							if (isWorkExperience) {
-								// Split experience blocks and process each job
-								const experienceBlocks = section.content.split(/\n\s*\n/);
+							if (isWorkExperience || isEducation) {
+								// Split experience/education blocks and process each job/education entry
+								const blocks = section.content.split(/\n\s*\n/);
 
-								experienceBlocks.forEach((block, blockIndex) => {
+								blocks.forEach((block, blockIndex) => {
 									const lines = block.split('\n');
 
-									// First line should have job and timespan
-									let jobTitle = '';
-									let company = '';
+									// First line should have job/degree and timespan
+									let titleText = '';
+									let entity = ''; // Company or Institution
 									let timespan = '';
 
 									if (lines.length > 0) {
-										// Try to extract job title and timespan from the first line
-										// Assume format like "JOB TITLE | COMPANY | TIMESPAN" or similar
+										// Try to extract title and timespan from the first line
+										// Assume format like "JOB TITLE | COMPANY | TIMESPAN" or "DEGREE | INSTITUTION | TIMESPAN"
 										const parts = lines[0].split('|');
 										if (parts.length > 1) {
-											jobTitle = parts[0].trim();
+											titleText = parts[0].trim();
 
-											// If there are 3 parts, the middle is company, last is timespan
+											// If there are 3 parts, the middle is company/institution, last is timespan
 											if (parts.length > 2) {
-												company = parts[1].trim();
+												entity = parts[1].trim();
 												timespan = parts[2].trim();
 											} else {
-												// If only 2 parts, second is timespan, try to extract company from next line
+												// If only 2 parts, second is timespan
 												timespan = parts[1].trim();
-												if (lines.length > 1) {
-													company = lines[1].trim();
+
+												// For education, next line should be institution
+												if (isEducation && lines.length > 1) {
+													entity = lines[1].trim();
 												}
 											}
 										} else {
 											// Fallback if no pipe separators
-											jobTitle = lines[0].trim();
+											titleText = lines[0].trim();
 											if (lines.length > 1) {
-												company = lines[1].trim();
+												entity = lines[1].trim();
 											}
 										}
 									}
 
-									// Add job title and timespan on the same line
+									// Add title and timespan on the same line with title on left, timespan on right
 									sectionElements.push(
 										new Paragraph({
 											children: [
 												new TextRun({
-													text: jobTitle,
+													text: titleText,
 													bold: true,
 												}),
+												// Add a tab to push timespan to the right
 												new TextRun({
-													text: ' ' + timespan,
+													text: '\t' + timespan,
 													bold: true,
 												}),
 											],
 											spacing: {
 												after: 100,
 											},
+											tabStops: [
+												{
+													type: 'right',
+													position: 9000, // This should align to the right margin
+												},
+											],
 										}),
 									);
 
-									// Add company on next line
+									// Add company/institution on next line
 									sectionElements.push(
 										new Paragraph({
-											text: company,
+											text: entity,
 											spacing: {
 												after: 150,
 											},
 										}),
 									);
 
-									// Add bullet points for responsibilities/achievements
+									// Add bullet points for responsibilities/achievements or education details
 									let startBullets = 1;
-									if (company && lines.length > 1 && !lines[1].includes(company)) {
+									if (entity && lines.length > 1 && !lines[1].includes(entity)) {
 										startBullets = 2;
 									}
 
+									// If this is education and second line is institution, start bullets from line 3
+									if (isEducation && lines.length > 1 && lines[1].trim() === entity) {
+										startBullets = 2;
+									}
+
+									let bulletPointCount = 0;
 									for (let i = startBullets; i < lines.length; i++) {
 										const line = lines[i].trim();
 										if (!line) continue;
+
+										bulletPointCount++;
 
 										// Add bullet point with hanging indent
 										if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
@@ -334,8 +351,30 @@ export const handleDownloadResumeDocx = async ({
 										}
 									}
 
-									// Add a separator between jobs except for the last one
-									if (blockIndex < experienceBlocks.length - 1) {
+									// For Work Experience, ensure at least 3 bullet points (fallback if Claude didn't provide enough)
+									if (isWorkExperience && bulletPointCount < 3) {
+										// Add generic bullet points if needed to reach minimum of 3
+										for (let i = bulletPointCount; i < 3; i++) {
+											sectionElements.push(
+												new Paragraph({
+													children: [
+														new TextRun({ text: '• ' }),
+														new TextRun({
+															text: `Additional responsibility related to ${titleText} role.`,
+														}),
+													],
+													spacing: { after: 120 },
+													indent: {
+														left: 120,
+														hanging: 120,
+													},
+												}),
+											);
+										}
+									}
+
+									// Add a separator between entries except for the last one
+									if (blockIndex < blocks.length - 1) {
 										sectionElements.push(
 											new Paragraph({
 												spacing: {
@@ -365,7 +404,7 @@ export const handleDownloadResumeDocx = async ({
 
 								return sectionElements;
 							} else {
-								// For other sections, process normally (with bullet indent for non-education entries)
+								// For other sections, process normally
 								const sectionContent = [
 									...section.content.split('\n').map((line, lineIndex) => {
 										const trimmedLine = line.trim();
@@ -374,13 +413,6 @@ export const handleDownloadResumeDocx = async ({
 												spacing: { after: 50 },
 											});
 										}
-
-										// Update this condition to better handle the new education format
-										// This replaces the existing isSchoolName check with a more robust one
-										const isEducationHeaderLine =
-											isEducation &&
-											lineIndex === 0 && // First line of a block
-											trimmedLine.includes('|'); // Has pipe separator
 
 										if (
 											trimmedLine.startsWith('•') ||
@@ -396,67 +428,12 @@ export const handleDownloadResumeDocx = async ({
 													hanging: 120,
 												},
 											});
-										} else if (isEducationHeaderLine) {
-											// This is an education header line with pipe separators
-											// Process similar to work experience headers
-											const parts = trimmedLine.split('|');
-
-											if (parts.length >= 2) {
-												const degree = parts[0].trim();
-												const timespan = parts.length > 2 ? parts[2].trim() : parts[1].trim();
-
-												return new Paragraph({
-													children: [
-														new TextRun({
-															text: degree,
-															bold: true,
-														}),
-														new TextRun({
-															text: ' ' + timespan,
-															bold: true,
-														}),
-													],
-													spacing: {
-														after: 100,
-													},
-												});
-											} else {
-												// Fallback for improperly formatted education header
-												return new Paragraph({
-													text: trimmedLine,
-													// bold: true,
-													spacing: { after: 120 },
-												});
-											}
 										} else {
-											// For institution name or other non-bullet details in education
-											// If it's the second line of an education block and follows a header with pipes
-											if (
-												isEducation &&
-												lineIndex === 1 &&
-												section.content.split('\n')[0].includes('|')
-											) {
-												// This is likely the institution name if not a bullet
-												return new Paragraph({
-													text: trimmedLine,
-													spacing: {
-														after: 150,
-													},
-												});
-											} else {
-												// Other lines - format as bullets for consistency
-												return new Paragraph({
-													children: [
-														new TextRun({ text: '• ' }),
-														new TextRun({ text: trimmedLine }),
-													],
-													spacing: { after: 120 },
-													indent: {
-														left: 120,
-														hanging: 120,
-													},
-												});
-											}
+											// Other lines - format as regular text
+											return new Paragraph({
+												text: trimmedLine,
+												spacing: { after: 120 },
+											});
 										}
 									}),
 									// Add extra space after each section
@@ -637,33 +614,34 @@ export const handleDownloadResumePdf = async ({
 			const isWorkExperience = section.title.toLowerCase().includes('experience');
 			const isEducation = section.title.toLowerCase().includes('education');
 
-			if (isWorkExperience) {
-				const experienceBlocks = section.content.split(/\n\s*\n/);
-				for (let blockIndex = 0; blockIndex < experienceBlocks.length; blockIndex++) {
-					const block = experienceBlocks[blockIndex];
+			// Handle both work experience and education with the same structured approach
+			if (isWorkExperience || isEducation) {
+				const blocks = section.content.split(/\n\s*\n/);
+				for (let blockIndex = 0; blockIndex < blocks.length; blockIndex++) {
+					const block = blocks[blockIndex];
 					const lines = block.split('\n');
 
-					let jobTitle = '';
-					let company = '';
+					let titleText = '';
+					let entity = ''; // Company or Institution
 					let timespan = '';
 
 					if (lines.length > 0) {
 						const parts = lines[0].split('|');
 						if (parts.length > 1) {
-							jobTitle = parts[0].trim();
+							titleText = parts[0].trim();
 							if (parts.length > 2) {
-								company = parts[1].trim();
+								entity = parts[1].trim();
 								timespan = parts[2].trim();
 							} else {
 								timespan = parts[1].trim();
 								if (lines.length > 1) {
-									company = lines[1].trim();
+									entity = lines[1].trim();
 								}
 							}
 						} else {
-							jobTitle = lines[0].trim();
+							titleText = lines[0].trim();
 							if (lines.length > 1) {
-								company = lines[1].trim();
+								entity = lines[1].trim();
 							}
 						}
 					}
@@ -673,26 +651,40 @@ export const handleDownloadResumePdf = async ({
 						yPos = margin;
 					}
 
+					// Company/Institution on left and timespan on right (bold)
 					doc.setFont('Helvetica', 'bold');
 					doc.setFontSize(11);
-					doc.text(jobTitle, margin, yPos);
+					doc.text(entity, margin, yPos);
 					const timespanWidth = doc.getTextWidth(timespan);
 					doc.text(timespan, pageWidth - margin - timespanWidth, yPos);
 					yPos += 5;
 
+					// Job title/degree name
 					doc.setFont('Helvetica', 'normal');
 					doc.setFontSize(10);
-					doc.text(company, margin, yPos);
+					doc.text(titleText, margin, yPos);
 					yPos += 6;
 
 					let startBullets = 1;
-					if (company && lines.length > 1 && !lines[1].includes(company)) {
+					// If entity is on second line, start bullets from third line
+					if (entity && lines.length > 1 && lines[1].trim() === entity) {
+						startBullets = 2;
+					}
+					// If entity is embedded in first line (part of pipe-separated header)
+					else if (entity && lines[0].includes('|') && lines[0].includes(entity)) {
+						startBullets = 1;
+					}
+					// Default case - entity might be on second line
+					else if (entity && lines.length > 1 && !lines[1].includes(entity)) {
 						startBullets = 2;
 					}
 
+					let bulletPointCount = 0;
 					for (let i = startBullets; i < lines.length; i++) {
 						const line = lines[i].trim();
 						if (!line) continue;
+						bulletPointCount++;
+
 						if (yPos > pageHeight - margin) {
 							doc.addPage();
 							yPos = margin;
@@ -708,7 +700,25 @@ export const handleDownloadResumePdf = async ({
 						});
 					}
 
-					if (blockIndex < experienceBlocks.length - 1) {
+					// For Work Experience, ensure at least 3 bullet points
+					if (isWorkExperience && bulletPointCount < 3) {
+						// Add generic bullet points to reach minimum of 3
+						for (let i = bulletPointCount; i < 3; i++) {
+							if (yPos > pageHeight - margin) {
+								doc.addPage();
+								yPos = margin;
+							}
+
+							const genericBullet = `• Additional responsibility related to ${titleText} role.`;
+							const wrappedText = doc.splitTextToSize(genericBullet, contentWidth);
+							wrappedText.forEach((txt, idx) => {
+								doc.text(txt, idx === 0 ? margin : margin + bulletMargin, yPos);
+								yPos += lineHeight;
+							});
+						}
+					}
+
+					if (blockIndex < blocks.length - 1) {
 						yPos += 4;
 						if (yPos < pageHeight - margin) {
 							doc.setDrawColor(200);
@@ -719,38 +729,24 @@ export const handleDownloadResumePdf = async ({
 					}
 				}
 			} else {
+				// Process other sections normally
 				doc.setFont('Helvetica', 'normal');
 				doc.setFontSize(10);
 				const contentLines = section.content.split('\n');
-				let isFirstLineInEntry = true;
 				for (let lineIndex = 0; lineIndex < contentLines.length; lineIndex++) {
 					const line = contentLines[lineIndex];
 					const trimmedLine = line.trim();
 					if (!trimmedLine) {
 						yPos += 2;
-						isFirstLineInEntry = true;
 						continue;
 					}
 					if (yPos > pageHeight - margin) {
 						doc.addPage();
 						yPos = margin;
 					}
-					const isSchoolName =
-						isEducation &&
-						isFirstLineInEntry &&
-						!trimmedLine.startsWith('•') &&
-						!trimmedLine.startsWith('-') &&
-						!trimmedLine.startsWith('*') &&
-						!trimmedLine.match(
-							/^(bachelor|master|phd|doctor|associate|b\.s\.|m\.s\.|b\.a\.|m\.a\.|ph\.d\.|gpa|course|degree|certificate)/i,
-						);
+
 					let formattedLine = trimmedLine;
-					if (
-						!trimmedLine.startsWith('•') &&
-						!trimmedLine.startsWith('-') &&
-						!trimmedLine.startsWith('*') &&
-						!isSchoolName
-					) {
+					if (!trimmedLine.startsWith('•') && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('*')) {
 						formattedLine = '• ' + trimmedLine;
 					}
 					const wrappedLines = doc.splitTextToSize(formattedLine, contentWidth);
@@ -758,7 +754,6 @@ export const handleDownloadResumePdf = async ({
 						doc.text(txt, idx === 0 ? margin : margin + bulletMargin, yPos);
 						yPos += lineHeight;
 					});
-					isFirstLineInEntry = false;
 				}
 			}
 			yPos += 10;
