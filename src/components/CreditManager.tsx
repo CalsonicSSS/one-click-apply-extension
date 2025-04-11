@@ -21,7 +21,7 @@ export function CreditManager({ browserId, credits }: { browserId: string | null
 		}
 	};
 
-	if (!browserId || !credits) {
+	if (!browserId || credits === null) {
 		return <></>;
 	}
 	return (

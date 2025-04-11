@@ -177,7 +177,7 @@ const ProfileTab = ({
 				)}
 			</div>
 
-			{/* Job posting input content by user */}
+			{/* Job posting input content by user (For firecrawl error or no job content evaluated error) */}
 			{isSuggestionGenerationError && suggestionGenerationError?.message === 'firecrawl error' && (
 				<div className='space-y-2'>
 					<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
@@ -201,7 +201,7 @@ const ProfileTab = ({
 				variant='default'
 				className='h-12 w-full hover:opacity-90'
 				onClick={onGenerateSuggestions}
-				disabled={isSuggestionGenerationPending || !storedFilesObj.resume || !credits}
+				disabled={isSuggestionGenerationPending || !storedFilesObj.resume || credits === null || credits === 0}
 			>
 				{isSuggestionGenerationPending ? (
 					<span className='flex items-center justify-center'>
@@ -212,6 +212,13 @@ const ProfileTab = ({
 					'Generate Suggestions'
 				)}
 			</Button>
+
+			{/* lets purchase more credit */}
+			{credits === 0 && (
+				<div className='rounded-lg border border-yellow-300 bg-yellow-100 p-3 text-sm text-yellow-600'>
+					Get more credits to get out of this Job Hunting Hell 🏃‍♂️💨
+				</div>
+			)}
 
 			{/* Suggestion generation error (For non firecrawl related error) */}
 			{isSuggestionGenerationError && suggestionGenerationError?.message !== 'firecrawl error' && (
@@ -227,7 +234,7 @@ const ProfileTab = ({
 			<div className='flex-grow'></div>
 
 			{/* Credit Manager */}
-			{credits ? (
+			{credits !== null ? (
 				<CreditManager browserId={browserId} credits={credits} />
 			) : (
 				<div className='flex h-10 items-center justify-center'>

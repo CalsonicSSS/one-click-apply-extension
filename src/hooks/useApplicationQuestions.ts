@@ -10,7 +10,8 @@ export const useApplicationQuestions = () => {
 	const [questionInput, setQuestionInput] = useState('');
 	const [additionalRequirementsInput, setAdditionalRequirementsInput] = useState('');
 	const [tabSpecificAnsweredQuestions, setTabSpecificAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
-	const [questionHandlingErrorMessage, setQuestionHandlingErrorMessage] = useState<string>('');
+	const [questionHandlingErrMsg, setQuestionHandlingErrMsg] = useState<string>('');
+	const [questionGeneratingErrMsg, setQuestionGeneratingErrMsg] = useState<string>('');
 
 	// Get the current tab ID when the hook initializes
 	useEffect(() => {
@@ -22,7 +23,7 @@ export const useApplicationQuestions = () => {
 				}
 			} catch (err) {
 				console.error('Error getting current tab ID:', err);
-				setQuestionHandlingErrorMessage('Error getting current tab ID');
+				setQuestionHandlingErrMsg('Error getting current tab ID');
 			}
 		};
 		getCurrentTabId();
@@ -47,7 +48,7 @@ export const useApplicationQuestions = () => {
 				}
 			} catch (err) {
 				console.error('Error loading tab-specific application questions:', err);
-				setQuestionHandlingErrorMessage('Failed to load saved questions');
+				setQuestionHandlingErrMsg('Failed to load saved questions');
 			}
 		};
 
@@ -58,6 +59,8 @@ export const useApplicationQuestions = () => {
 		if (!currentTabId) return;
 
 		try {
+			setQuestionHandlingErrMsg('');
+
 			// update tabSpecificAnsweredQuestions state
 			const updatedTabAnsweredQuestions = [answeredQuestion, ...tabSpecificAnsweredQuestions];
 			setTabSpecificAnsweredQuestions(updatedTabAnsweredQuestions);
@@ -70,7 +73,7 @@ export const useApplicationQuestions = () => {
 			await chrome.storage.local.set({ allAnsweredQuestions });
 		} catch (err) {
 			console.error('Error saving application question:', err);
-			setQuestionHandlingErrorMessage('Failed to save and update answered question');
+			setQuestionHandlingErrMsg('Failed to save and update answered question');
 		}
 	};
 
@@ -78,6 +81,8 @@ export const useApplicationQuestions = () => {
 		if (!currentTabId) return;
 
 		try {
+			setQuestionHandlingErrMsg('');
+
 			// update tabSpecificAnsweredQuestions state
 			const updatedTabAnsweredQuestions = tabSpecificAnsweredQuestions.filter((q) => q.id !== id);
 			setTabSpecificAnsweredQuestions(updatedTabAnsweredQuestions);
@@ -90,7 +95,7 @@ export const useApplicationQuestions = () => {
 			await chrome.storage.local.set({ allAnsweredQuestions });
 		} catch (err) {
 			console.error('Error deleting application question:', err);
-			setQuestionHandlingErrorMessage('Failed to delete answered question');
+			setQuestionHandlingErrMsg('Failed to delete answered question');
 		}
 	};
 
@@ -109,9 +114,10 @@ export const useApplicationQuestions = () => {
 			await saveQuestion(newAnsweredQuestion);
 			setQuestionInput('');
 			setAdditionalRequirementsInput('');
+			setQuestionGeneratingErrMsg('');
 		},
 		onError: (error) => {
-			setQuestionHandlingErrorMessage(error.message);
+			setQuestionGeneratingErrMsg(error.message);
 		},
 	});
 
@@ -122,7 +128,8 @@ export const useApplicationQuestions = () => {
 		setAdditionalRequirementsInput,
 		tabSpecificAnsweredQuestions,
 		deleteQuestion,
-		questionHandlingErrorMessage,
+		questionHandlingErrMsg,
+		questionGeneratingErrMsg,
 		mutation,
 	};
 };

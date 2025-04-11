@@ -22,7 +22,8 @@ const ApplicationQuestions = ({ extractedJobPostingDetails, storedFilesObj }: Ap
 		setAdditionalRequirementsInput,
 		tabSpecificAnsweredQuestions,
 		deleteQuestion,
-		questionHandlingErrorMessage,
+		questionHandlingErrMsg,
+		questionGeneratingErrMsg,
 		mutation: { isError, error, isPending, mutate },
 	} = useApplicationQuestions();
 
@@ -38,9 +39,9 @@ const ApplicationQuestions = ({ extractedJobPostingDetails, storedFilesObj }: Ap
 	return (
 		<div className='space-y-6'>
 			{/* Error Messages */}
-			{questionHandlingErrorMessage && (
+			{questionHandlingErrMsg && (
 				<div className='mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
-					{questionHandlingErrorMessage}
+					{questionHandlingErrMsg}
 				</div>
 			)}
 
@@ -119,7 +120,7 @@ const ApplicationQuestions = ({ extractedJobPostingDetails, storedFilesObj }: Ap
 
 				{isError && (
 					<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
-						{error instanceof Error ? error.message : 'An error occurred'}
+						{questionGeneratingErrMsg}
 					</div>
 				)}
 			</div>
