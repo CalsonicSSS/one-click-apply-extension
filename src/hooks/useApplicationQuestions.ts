@@ -4,7 +4,7 @@ import { formatDate } from '@/utils/datetime';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
-// this is only call under the ApplicationQuestion component
+// this hook is only called / used under the ApplicationQuestion component
 export const useApplicationQuestions = () => {
 	const [currentTabId, setCurrentTabId] = useState<number | null>(null);
 	const [questionInput, setQuestionInput] = useState('');
