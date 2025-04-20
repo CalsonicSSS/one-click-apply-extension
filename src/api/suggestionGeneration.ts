@@ -16,14 +16,17 @@ import type {
 export const evaluateJobPostingPageRequest = async ({
 	websiteUrl,
 	jobPostingContent,
+	browserId,
 }: {
 	websiteUrl?: string;
 	jobPostingContent?: string;
+	browserId: string;
 }) => {
 	// create post request payload
 	const requestPayload: JobPostingEvalRequestInputs = {
 		website_url: websiteUrl,
 		job_posting_content: jobPostingContent,
+		browser_id: browserId,
 	};
 
 	// all errors are handled on server side by fastapi

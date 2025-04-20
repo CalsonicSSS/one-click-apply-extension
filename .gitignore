@@ -34,3 +34,6 @@ dist/
 
 # additional files
 action.txt
+
+# other
+test.js

@@ -25,7 +25,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 	const [generationProgress, setGenerationProgress] = useState<GenerationProgress | null>(null);
 	const [browserId, setBrowserId] = useState<string | null>(null);
 	const [sugguestionAndCreditLoadingErrMsg, setSugguestionAndCreditLoadingErrMsg] = useState<string>('');
-	const [jobPostingContent, setJobPostingContent] = useState<string>('');
+	const [jobPostingContent, setJobPostingContent] = useState<string | null>(null);
 
 	const fetchAndSetUserCredits = async (browserId: string | null) => {
 		if (!browserId) return;
@@ -156,11 +156,13 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 			if (jobPostingContent) {
 				jobPostingEvaluationResponseResult = await evaluateJobPostingPageRequest({
 					jobPostingContent,
+					browserId,
 				});
 			} else {
 				// If no manual content, try URL scraping
 				jobPostingEvaluationResponseResult = await evaluateJobPostingPageRequest({
 					websiteUrl: response.url,
+					browserId,
 				});
 			}
 
@@ -198,7 +200,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 				storedFilesObj,
 			});
 
-			// STEP 4: Complete - combine all results into FullSuggestionGeneration
+			// STEP 5: Complete - combine all results into FullSuggestionGeneration
 			setGenerationProgress({
 				stagePercentage: GenerationStage.COMPLETED,
 				message: 'Generation process complete!',

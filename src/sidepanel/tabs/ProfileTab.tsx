@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import type { FilesStorageState } from '@/types/fileManagement';
 import { GenerationStage, type GenerationProgress } from '@/types/progressTracking';
 import { Trash2, Upload } from 'lucide-react';
-import { useRef, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 
 type ProfileTabProps = {
 	storedFilesObj: FilesStorageState;
@@ -18,7 +18,7 @@ type ProfileTabProps = {
 	isSuggestionGenerationError: boolean;
 	suggestionGenerationError: Error;
 	isSuggestionGenerationPending: boolean;
-	onGenerateSuggestions: () => void;
+	handleGenerateSuggestions: () => void;
 	generationProgress: GenerationProgress | null;
 	browserId: string | null;
 	credits: null | number;
@@ -35,13 +35,15 @@ const ProfileTab = ({
 	isSuggestionGenerationError,
 	suggestionGenerationError,
 	isSuggestionGenerationPending,
-	onGenerateSuggestions,
+	handleGenerateSuggestions,
 	generationProgress,
 	browserId,
 	credits,
 	jobPostingContent,
 	setJobPostingContent,
 }: ProfileTabProps) => {
+	const [isUserInputNeeded, setIsUserInputNeeded] = useState<boolean>(false);
+	const [isPersistingUserInputNeeded, setIsPersistingUserInputNeeded] = useState<boolean>(false);
 	const resumeInputRef = useRef<HTMLInputElement>(null);
 	const supportingInputRef = useRef<HTMLInputElement>(null);
 
@@ -58,6 +60,18 @@ const ProfileTab = ({
 
 	const showProgressBar =
 		isSuggestionGenerationPending || generationProgress?.stagePercentage === GenerationStage.COMPLETED;
+
+	useEffect(() => {
+		if (isSuggestionGenerationError && suggestionGenerationError?.message === 'firecrawl error') {
+			setIsUserInputNeeded(true);
+		}
+	}, [isSuggestionGenerationError, suggestionGenerationError]);
+
+	useEffect(() => {
+		if (jobPostingContent !== null) {
+			setIsPersistingUserInputNeeded(true);
+		}
+	}, [jobPostingContent]);
 
 	return (
 		<div className='flex h-full flex-col space-y-6'>
@@ -177,20 +191,17 @@ const ProfileTab = ({
 				)}
 			</div>
 
-			{/* Job posting input content by user (For firecrawl error or no job content evaluated error) */}
-			{isSuggestionGenerationError && suggestionGenerationError?.message === 'firecrawl error' && (
+			{/* isUserInputNeeded: handle firecrawl error and let user to copy paste job posting content directly with error message */}
+			{(isUserInputNeeded || isPersistingUserInputNeeded) && (
 				<div className='space-y-2'>
-					<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
-						Unable to scrape the job content on this site 😱 Let's paste the job posting content below 💪
-					</div>
-					<div className='flex items-center justify-between'>
-						<label htmlFor='job content' className='text-xs font-medium text-gray-600'>
-							Job Posting Content *
-						</label>
+					<div className='mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
+						We can't auto access this site yet 😱 Let's paste the job posting content below 💪
 					</div>
 					<Input
 						id='job content'
-						value={jobPostingContent}
+						value={jobPostingContent ?? ''}
+						placeholder='Paste the job posting detail here...'
+						className='resize-none rounded-lg border border-gray-300 bg-white p-3 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-0 focus-visible:outline-none'
 						onChange={(e) => setJobPostingContent(e.target.value)}
 					/>
 				</div>
@@ -200,14 +211,14 @@ const ProfileTab = ({
 			<Button
 				variant='default'
 				className='h-12 w-full hover:opacity-90'
-				onClick={onGenerateSuggestions}
+				onClick={handleGenerateSuggestions}
 				disabled={isSuggestionGenerationPending || !storedFilesObj.resume || credits === null || credits === 0}
 			>
 				{isSuggestionGenerationPending ? (
-					<span className='flex items-center justify-center'>
-						<span className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent'></span>
+					<div className='flex items-center justify-center'>
+						<span className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent' />
 						Generating...
-					</span>
+					</div>
 				) : (
 					'Generate Suggestions'
 				)}
@@ -216,7 +227,7 @@ const ProfileTab = ({
 			{/* lets purchase more credit */}
 			{credits === 0 && (
 				<div className='rounded-lg border border-yellow-300 bg-yellow-100 p-3 text-sm text-yellow-600'>
-					Get more credits to get out of this Job Hunting Hell 🏃‍♂️💨
+					Get more credits to get OUT of this Job Hunting Hell 🏃‍♂️💨
 				</div>
 			)}
 

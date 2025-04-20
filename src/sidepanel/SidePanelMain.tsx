@@ -69,7 +69,7 @@ const SidePanelMain = () => {
 						isSuggestionGenerationError={isSuggestionGenerationError}
 						suggestionGenerationError={suggestionGenerationError}
 						isSuggestionGenerationPending={isSuggestionGenerationPending}
-						onGenerateSuggestions={handleGenerateSuggestions}
+						handleGenerateSuggestions={handleGenerateSuggestions}
 						generationProgress={generationProgress}
 						browserId={browserId}
 						credits={credits}
