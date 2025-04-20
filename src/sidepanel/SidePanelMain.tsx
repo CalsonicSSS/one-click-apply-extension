@@ -49,8 +49,11 @@ const SidePanelMain = () => {
 			{/* Header */}
 			<div className='p-4'>
 				{/* current changing UI title name to "One-click craft" */}
-				<h1 className='text-2xl font-bold text-gray-900'>One-click Craft</h1>
-				<p className='text-sm text-gray-500'>Get tailored resume & CV, just one click away</p>
+				<div className='flex items-center justify-between'>
+					<h1 className='text-2xl font-bold text-gray-900'>One-click Craft</h1>
+					<span className='text-2xl'>🖱️✨</span>
+				</div>
+				<p className='mt-2 text-sm text-gray-500'>Get tailored resume & CV, just one click away</p>
 			</div>
 
 			<Tabs value={activeTab} onValueChange={setActiveTab} className='flex flex-1 flex-col overflow-hidden px-4'>
