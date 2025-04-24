@@ -224,13 +224,6 @@ const ProfileTab = ({
 				)}
 			</Button>
 
-			{/* lets purchase more credit */}
-			{credits === 0 && (
-				<div className='rounded-lg border border-yellow-300 bg-yellow-100 p-3 text-sm text-yellow-600'>
-					Get more credits to get OUT of this Job Hunting Hell 🏃‍♂️💨
-				</div>
-			)}
-
 			{/* Suggestion generation error (For non firecrawl related error) */}
 			{isSuggestionGenerationError && suggestionGenerationError?.message !== 'firecrawl error' && (
 				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
@@ -244,15 +237,26 @@ const ProfileTab = ({
 			{/* This will take up remaining space */}
 			<div className='flex-grow'></div>
 
-			{/* Credit Manager */}
-			{credits !== null ? (
-				<CreditManager browserId={browserId} credits={credits} />
-			) : (
-				<div className='flex h-10 items-center justify-center'>
-					<div className='h-5 w-5 animate-spin rounded-full border-2 border-gray-500 border-t-transparent' />
-					<p className='ml-5 text-sm'>loading your credits</p>
-				</div>
-			)}
+			{/* user credits section */}
+			<div>
+				{/* purchase more credit message */}
+
+				{credits === 0 && (
+					<div className='mb-6 rounded-lg border border-yellow-300 bg-yellow-100 p-3 text-sm text-yellow-600'>
+						Lets supercharge and get more credits 🏃‍♂️💨
+					</div>
+				)}
+
+				{/* Credit Manager components */}
+				{credits !== null ? (
+					<CreditManager browserId={browserId} credits={credits} />
+				) : (
+					<div className='flex h-10 items-center justify-center'>
+						<div className='h-5 w-5 animate-spin rounded-full border-2 border-gray-500 border-t-transparent' />
+						<p className='ml-5 text-sm'>loading your credits</p>
+					</div>
+				)}
+			</div>
 
 			{/* Your Feedback & Rant Button at the very bottom */}
 			<Button
