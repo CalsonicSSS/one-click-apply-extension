@@ -58,7 +58,7 @@
 		},
 		"externally_connectable": {
 			"matches": [
-				"https://wise-craft-server.onrender.com/*"
+				"https://one-click-craft-server-project.onrender.com/*"
 			]
 		},
 		"web_accessible_resources": [
