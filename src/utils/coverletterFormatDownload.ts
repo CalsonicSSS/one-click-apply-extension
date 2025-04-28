@@ -7,7 +7,11 @@ type docFormatAndDownload = {
 	jobTitle: string;
 };
 
-export const handleDownloadDocx = async ({ coverLetter, applicant_name, jobTitle }: docFormatAndDownload) => {
+export const handleDownloadCoverLetterDocx = async ({
+	coverLetter,
+	applicant_name,
+	jobTitle,
+}: docFormatAndDownload) => {
 	try {
 		// Split the cover letter into lines
 		const lines = coverLetter.split('\n');
@@ -58,7 +62,7 @@ export const handleDownloadDocx = async ({ coverLetter, applicant_name, jobTitle
 	}
 };
 
-export const handleDownloadPdf = async ({ coverLetter, applicant_name, jobTitle }: docFormatAndDownload) => {
+export const handleDownloadCoverLetterPdf = async ({ coverLetter, applicant_name, jobTitle }: docFormatAndDownload) => {
 	try {
 		// Create new PDF document
 		const doc = new jsPDF({

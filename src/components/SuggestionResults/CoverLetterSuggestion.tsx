@@ -4,7 +4,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { handleDownloadDocx, handleDownloadPdf } from '@/utils/coverletterFormatDownload';
+import { handleDownloadCoverLetterDocx, handleDownloadCoverLetterPdf } from '@/utils/coverletterFormatDownload';
 import { CheckCircle, Copy, Download, FileDown } from 'lucide-react';
 import { useState } from 'react';
 
@@ -28,7 +28,7 @@ const CoverLetterSuggestion = ({ coverLetter, applicant_name, jobTitle }: CoverL
 	const onDownloadDocx = async () => {
 		setIsDownloadingDocx(true);
 		try {
-			await handleDownloadDocx({ coverLetter, applicant_name, jobTitle });
+			await handleDownloadCoverLetterDocx({ coverLetter, applicant_name, jobTitle });
 		} finally {
 			setIsDownloadingDocx(false);
 		}
@@ -37,7 +37,7 @@ const CoverLetterSuggestion = ({ coverLetter, applicant_name, jobTitle }: CoverL
 	const onDownloadPdf = async () => {
 		setIsDownloadingPdf(true);
 		try {
-			await handleDownloadPdf({ coverLetter, applicant_name, jobTitle });
+			await handleDownloadCoverLetterPdf({ coverLetter, applicant_name, jobTitle });
 		} finally {
 			setIsDownloadingPdf(false);
 		}

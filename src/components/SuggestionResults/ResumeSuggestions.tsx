@@ -27,14 +27,6 @@ const ResumeSuggestions = ({ suggestions, fullResume, jobTitle }: ResumeSuggesti
 		setTimeout(() => setCopiedIndex(null), 2000);
 	};
 
-	// const handleCopyFullResume = () => {
-	// 	if (fullResume) {
-	// 		navigator.clipboard.writeText(fullResume.full_resume_text);
-	// 		setCopied(true);
-	// 		setTimeout(() => setCopied(false), 2000);
-	// 	}
-	// };
-
 	const onDownloadDocx = async () => {
 		if (!fullResume) return;
 
