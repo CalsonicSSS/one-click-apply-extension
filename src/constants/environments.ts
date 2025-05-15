@@ -2,7 +2,7 @@
 const DEV_DOMAIN = 'http://localhost:8000';
 const PROD_DOMAIN = 'https://one-click-craft-server-project.onrender.com';
 
-export const DOMAIN_URL = PROD_DOMAIN;
+export const DOMAIN_URL = DEV_DOMAIN;
 
 type CreditPackage = {
 	credits: number;
@@ -10,8 +10,6 @@ type CreditPackage = {
 };
 
 export const CREDIT_PACKAGES: Record<string, CreditPackage> = {
-	'20': { credits: 20, price: 3.99 },
-	'50': { credits: 50, price: 7.99 },
+	'15': { credits: 15, price: 3.99 },
+	'40': { credits: 40, price: 8.99 },
 };
-
-export const FREE_TIER_USER_CREDIT_COUNT = 10;
