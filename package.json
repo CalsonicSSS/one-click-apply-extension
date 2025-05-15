@@ -1,7 +1,7 @@
 {
 	"name": "one-click-craft",
 	"displayName": "One Click Craft",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Your tailored resume & CV, just one click away—on any job site you visit!",
 	"author": "Pillar.ai <calson.developer@gmail.com>",
 	"scripts": {
