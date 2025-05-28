@@ -51,7 +51,8 @@
 			"storage",
 			"sidePanel",
 			"tabs",
-			"activeTab"
+			"activeTab",
+			"windows"
 		],
 		"action": {
 			"default_title": "Open One-Click Craft"

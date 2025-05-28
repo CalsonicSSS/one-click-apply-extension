@@ -62,7 +62,11 @@ const ProfileTab = ({
 		isSuggestionGenerationPending || generationProgress?.stagePercentage === GenerationStage.COMPLETED;
 
 	useEffect(() => {
-		if (isSuggestionGenerationError && suggestionGenerationError?.message === 'firecrawl error') {
+		if (
+			isSuggestionGenerationError &&
+			(suggestionGenerationError?.message === 'firecrawl error' ||
+				suggestionGenerationError?.message === 'No content error')
+		) {
 			setIsUserInputNeeded(true);
 		}
 	}, [isSuggestionGenerationError, suggestionGenerationError]);
@@ -194,8 +198,8 @@ const ProfileTab = ({
 			{/* isUserInputNeeded: handle firecrawl error and let user to copy paste job posting content directly with error message */}
 			{(isUserInputNeeded || isPersistingUserInputNeeded) && (
 				<div className='space-y-2'>
-					<div className='mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
-						We can't auto access this site yet 😱 Let's paste the job posting content below 💪
+					<div className='mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-500'>
+						We can't auto access this site yet 🥺 Let's paste the job posting content below 💪
 					</div>
 					<Input
 						id='job content'
@@ -226,7 +230,7 @@ const ProfileTab = ({
 
 			{/* Suggestion generation error (For non firecrawl related error) */}
 			{isSuggestionGenerationError && suggestionGenerationError?.message !== 'firecrawl error' && (
-				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600'>
+				<div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-500'>
 					{suggestionGenerationError?.message}
 				</div>
 			)}

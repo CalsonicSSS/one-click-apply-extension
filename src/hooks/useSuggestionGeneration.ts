@@ -11,10 +11,6 @@ import type { FullSuggestionGeneration, JobPostingEvalResultResponse } from '@/t
 import { generateBrowserId } from '@/utils/browser';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-// the useSuggestionGeneration mainly responsible for handling states of allSuggestions and tabSpecificLatestFullSuggestion and suggestion generation process
-// which also involves other highly related state: currentTabId, credits, browserId (for user identification), generationProgress
-// we directly instansitate and manage here as they are working with the whole suggestion gen process here
-// we will also pass along the browserId and credit as well to credit manager component directly
 
 export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 	const [tabSpecificLatestFullSuggestion, setTabSpecificLatestFullSuggestion] = useState<
@@ -82,8 +78,8 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 			if (!currentTabId) return;
 
 			try {
-				// even before allSuggestions is set, get here will return {} by default from chrome
-				// then allSuggestionsResultPair.allSuggestions will return undefined for sure, since its {}, not {allSuggestions:value}
+				// even before allSuggestions is set, "get" method will return {} by default from chrome
+				// then allSuggestionsResultPair.allSuggestions will return undefined
 				const allSuggestionsResultPair = await chrome.storage.local.get('allSuggestions');
 
 				if (!allSuggestionsResultPair.allSuggestions) {
@@ -105,7 +101,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 		loadTabSpecificSuggestion();
 	}, [currentTabId]);
 
-	// Listen for messages from the background script to refresh credits after user purchases navigate to success url page
+	// Listen for messages from the background script to refresh credits
 	useEffect(() => {
 		function handleCreditUpdate(message) {
 			if (message.action === 'creditUpdateRequired' && browserId) {
@@ -148,18 +144,21 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 
 			let jobPostingEvaluationResponseResult: JobPostingEvalResultResponse;
 
-			const response = await chrome.runtime.sendMessage({
-				action: 'getCurrentUrl',
-			});
-
 			// If jobPostingContent is set (manual input), use that
-			if (jobPostingContent) {
+			if (jobPostingContent && jobPostingContent.trim()) {
+				console.log('Using manual job posting content');
 				jobPostingEvaluationResponseResult = await evaluateJobPostingPageRequest({
-					jobPostingContent,
+					jobPostingContent: jobPostingContent.trim(),
 					browserId,
 				});
 			} else {
-				// If no manual content, try URL scraping
+				// If no manual content, URL scraping
+				console.log('Attempting to get current URL for scraping');
+
+				const response = await chrome.runtime.sendMessage({
+					action: 'getCurrentUrl',
+				});
+
 				jobPostingEvaluationResponseResult = await evaluateJobPostingPageRequest({
 					websiteUrl: response.url,
 					browserId,
@@ -200,15 +199,12 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 				storedFilesObj,
 			});
 
-			// STEP 5: Complete - combine all results into FullSuggestionGeneration
+			// STEP 5: Complete - combine all results
 			setGenerationProgress({
 				stagePercentage: GenerationStage.COMPLETED,
 				message: 'Generation process complete!',
 			});
 
-			// Combine coverLetterResponseResult and resumeSuggestionsResponseResult into a single object
-			// we will also take "extracted_job_posting_details" from jobPostingEvaluationResponseResult to save them all together for now for convenience
-			// this "extracted_job_posting_details" for application questions later
 			const newFullSuggestedResult: FullSuggestionGeneration = {
 				job_title_name: coverLetterResponseResult.job_title_name,
 				company_name: coverLetterResponseResult.company_name,
@@ -220,10 +216,11 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 				full_resume: fullResumeResponseResult,
 			};
 
-			// after the entire process, we will call the setUserCredits to get the new currentCreditsCount to update usedCredits
+			// Refresh credits after successful generation
+			// backend already called "await consume_credit(browser_id)" to consume 1 credit for the user on the server side
 			fetchAndSetUserCredits(browserId);
 
-			// Update allSuggestions storage and tabSpecificLatestFullSuggestion states directly
+			// Update storage
 			const allSuggestionsResultPair = await chrome.storage.local.get('allSuggestions');
 			const allSuggestions =
 				(allSuggestionsResultPair.allSuggestions as Record<string, FullSuggestionGeneration>) || {};
@@ -236,7 +233,8 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 		} catch (error) {
 			// Reset progress on error
 			setGenerationProgress(null);
-			throw error; // Re-throw to be handled by the mutation
+			console.error('Generation process failed:', error);
+			throw error;
 		}
 	};
 
