@@ -1,0 +1,32 @@
+App Naming change all sources:
+
+- landing page content + github page DNS + goDadday CNAME
+
+- extension app
+
+-------------------------------------------------------------------------------------------
+
+Rename root folder name or change root project location:
+
+#1. Remove node_modules folder in Windows PowerShell:
+Remove-Item -Path .\node_modules -Recurse -Force
+
+#2. Clear pnpm store cache:
+pnpm store prune
+
+#3. Reinstall dependencies
+pnpm install
+
+#4. Then try running your project again
+pnpm dev
+
+-------------------------------------------------------------------------------------------
+
+Run extensions:
+- pnpm dev
+
+- pnpm build
+    - remove the "pdfobjectnewwindow" case entirely 
+    - this is to remove the "https://cdnjs.cloudflare.com/ajax/libs/pdfobject/2.1.1/pdfobject.min.js" to pass google privacy review for each new version
+
+- pnpm package

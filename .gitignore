@@ -33,7 +33,6 @@ dist/
 .tsbuildinfo
 
 # additional files
-action.txt
 
 # other
 test.js
