@@ -2,6 +2,12 @@ App Naming change all sources:
 
 - landing page content + github page DNS + goDadday CNAME
 
+- mongoDB DB name
+
+- render project domain url + stripe webhook
+
+- backend app
+
 - extension app
 
 -------------------------------------------------------------------------------------------
