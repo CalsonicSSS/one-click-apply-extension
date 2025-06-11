@@ -1,6 +1,6 @@
 // for the simplicity, I hardcoded the domain value here. Will need to tune this part for production
 const DEV_DOMAIN = 'http://localhost:8000';
-const PROD_DOMAIN = 'https://one-click-craft-server-project.onrender.com';
+const PROD_DOMAIN = 'https://one-click-apply-server.onrender.com';
 
 export const DOMAIN_URL = PROD_DOMAIN;
 

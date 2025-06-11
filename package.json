@@ -1,7 +1,7 @@
 {
-	"name": "one-click-craft",
-	"displayName": "One Click Craft",
-	"version": "0.0.2",
+	"name": "one-click-apply",
+	"displayName": "One-Click Apply",
+	"version": "0.2.1",
 	"description": "Your tailored resume & CV, just one click away—on any job site you visit!",
 	"author": "Pillar.ai <calson.developer@gmail.com>",
 	"scripts": {
@@ -55,11 +55,11 @@
 			"windows"
 		],
 		"action": {
-			"default_title": "Open One-Click Craft"
+			"default_title": "Open One-Click Apply"
 		},
 		"externally_connectable": {
 			"matches": [
-				"https://one-click-craft-server-project.onrender.com/*"
+				"https://one-click-apply-server.onrender.com/*"
 			]
 		},
 		"web_accessible_resources": [

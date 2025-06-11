@@ -1,6 +1,6 @@
-# One-Click Craft
+# One-Click Apply
 
-One-Click Craft is a professional resume and cover letter tailoring assistant that helps job seekers optimize their application materials for specific job postings. The project consists of a browser extension (Chrome/Edge) and a backend API server.
+One-Click Apply is a professional resume and cover letter tailoring assistant that helps job seekers optimize their application materials for specific job postings. The project consists of a browser extension (Chrome/Edge) and a backend API server.
 
 ## 🚀 Features
 
@@ -8,7 +8,7 @@ One-Click Craft is a professional resume and cover letter tailoring assistant th
 -   **Resume Tailoring**: Generates tailored suggestions to improve resumes for specific job applications
 -   **Cover Letter Generation**: Creates personalized cover letters that match job requirements
 -   **Full Resume Generation**: Creates optimized resumes from scratch for specific job postings
--   **Application Question Answering**: Helps craft effective answers to job application questions
+-   **Application Question Answering**: Helps generate effective answers to job application questions
 -   **Document Management**: Upload and manage your resume and supporting documents
 -   **DOCX & PDF Export**: Download professionally formatted documents ready for submission
 -   **Credit System**: Free credits for new users with affordable packages for continued use
@@ -142,7 +142,7 @@ FIRECRAWL_API_KEY=your_firecrawl_api_key
 
 # MongoDB Configuration
 MONGO_URI=your_mongodb_connection_string
-MONGO_DB_NAME=one_click_craft
+MONGO_DB_NAME=one_click_Apply
 
 # Stripe Configuration
 STRIPE_SECRET_KEY=your_stripe_secret_key
@@ -157,8 +157,8 @@ ALLOWED_ORIGINS=["*"]
 1. Clone the repository:
 
     ```
-    git clone https://github.com/your-username/one-click-craft.git
-    cd one-click-craft/server
+    git clone https://github.com/your-username/one-click-Apply.git
+    cd one-click-Apply/server
     ```
 
 2. Create and activate a virtual environment:
@@ -194,7 +194,7 @@ ALLOWED_ORIGINS=["*"]
 1. Navigate to the extension directory:
 
     ```
-    cd one-click-craft/extension
+    cd one-click-Apply/extension
     ```
 
 2. Install dependencies:
@@ -249,7 +249,7 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 
 ## 🌐 Deployment
 
--   Backend API is deployed on Render at `https://one-click-craft-server-project.onrender.com/`
+-   Backend API is deployed on Render at `https://one-click-Apply-server-project.onrender.com/`
 -   Extension is available for Chrome and Edge browsers
 
 ## 👥 Developers
