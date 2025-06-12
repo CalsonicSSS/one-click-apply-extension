@@ -153,7 +153,7 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 				});
 			} else {
 				// If no manual content, URL scraping
-				console.log('Attempting to get current URL for scraping');
+				console.log('sending getCurrentUrl request to background worker to get response...');
 
 				const response = await chrome.runtime.sendMessage({
 					action: 'getCurrentUrl',

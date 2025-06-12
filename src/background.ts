@@ -97,35 +97,30 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
 });
 
 // MESSAGE LISTENER - This is the correct pattern for Chrome extensions
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-	console.log('Background received message:', message);
-
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	if (message.action === 'getCurrentUrl') {
-		try {
-			// Always get fresh URL data when requested
-			await updateCurrentUrl();
+		console.log('getCurrentUrl message request received in background worker');
 
-			console.log('Sending URL response from background script:', currentUrl);
-			sendResponse({
-				url: currentUrl,
-				success: true,
-				windowId: currentWindowId,
-				tabId: currentTabId,
+		// Handle the promise manually instead of using async/await
+		updateCurrentUrl()
+			.then(() => {
+				sendResponse({
+					url: currentUrl,
+					success: true,
+					windowId: currentWindowId,
+					tabId: currentTabId,
+				});
+			})
+			.catch((error) => {
+				sendResponse({
+					url: '',
+					success: false,
+					error: error?.message || 'Unknown error',
+				});
 			});
-		} catch (error) {
-			console.error('Error getting current URL:', error);
-			sendResponse({
-				url: '',
-				success: false,
-				error: error.message,
-			});
-		}
 
-		// IMPORTANT: Return true to keep message channel open for async response
-		return true;
+		return true; // Keep channel open
 	}
-
-	// Handle other message types...
 	return false;
 });
 
