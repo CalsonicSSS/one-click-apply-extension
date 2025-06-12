@@ -159,6 +159,8 @@ export const useSuggestionGeneration = (storedFilesObj: FilesStorageState) => {
 					action: 'getCurrentUrl',
 				});
 
+				console.log('response:', response);
+
 				jobPostingEvaluationResponseResult = await evaluateJobPostingPageRequest({
 					websiteUrl: response.url,
 					browserId,
