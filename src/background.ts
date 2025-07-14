@@ -96,12 +96,12 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
 	}
 });
 
-// MESSAGE LISTENER for getCurrentUrl
+// MESSAGE LISTENER - This is the correct pattern for Chrome extensions
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	if (message.action === 'getCurrentUrl') {
 		console.log('getCurrentUrl message request received in background worker');
 
-		// Handle the promise using then instead of using async/await for sendResponse
+		// Handle the promise manually instead of using async/await
 		updateCurrentUrl()
 			.then(() => {
 				sendResponse({
@@ -125,24 +125,48 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
-// Side Panel Management (unchanged from original)
+// FIXED: Side Panel Management for TRUE tab-specific behavior
 
 const activePanelTabs: Set<number> = new Set();
 
+// CRITICAL: Initialize tab-specific behavior
+chrome.runtime.onInstalled.addListener(() => {
+	try {
+		// OPTION 1: Disable all default behavior
+		chrome.sidePanel.setOptions({
+			enabled: false, // Disable globally by default
+		});
+
+		console.log('SidePanel initialized with tab-specific behavior');
+	} catch (error) {
+		console.error('Error initializing side panel:', error);
+	}
+});
+
+// FIXED: Simplified action click handler that respects user gesture
 chrome.action.onClicked.addListener((tab) => {
 	if (!tab?.id) return;
 
 	try {
+		// STEP 1: Immediately configure the side panel for this specific tab (preserves user gesture)
 		chrome.sidePanel.setOptions({
 			tabId: tab.id,
 			path: 'sidepanel.html',
 			enabled: true,
 		});
 
-		chrome.sidePanel.open({ tabId: tab.id });
-		activePanelTabs.add(tab.id);
+		// STEP 2: Immediately open using the user gesture (no await to preserve gesture chain)
+		chrome.sidePanel
+			.open({ tabId: tab.id })
+			.then(() => {
+				activePanelTabs.add(tab.id);
+				console.log(`Opened side panel for tab ${tab.id}`);
+			})
+			.catch((error) => {
+				console.error('Error opening side panel:', error);
+			});
 	} catch (error) {
-		console.error('Error opening side panel:', error);
+		console.error('Error setting up side panel:', error);
 	}
 });
 
@@ -153,6 +177,7 @@ chrome.runtime.onInstalled.addListener(() => {
 	});
 });
 
+// Disable side panel for new tabs by default
 chrome.tabs.onCreated.addListener((tab) => {
 	if (tab.id) {
 		chrome.sidePanel.setOptions({
