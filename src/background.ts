@@ -96,12 +96,12 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
 	}
 });
 
-// MESSAGE LISTENER - This is the correct pattern for Chrome extensions
+// MESSAGE LISTENER for getCurrentUrl
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	if (message.action === 'getCurrentUrl') {
 		console.log('getCurrentUrl message request received in background worker');
 
-		// Handle the promise manually instead of using async/await
+		// Handle the promise using then instead of using async/await for sendResponse
 		updateCurrentUrl()
 			.then(() => {
 				sendResponse({

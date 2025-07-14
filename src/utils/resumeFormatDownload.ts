@@ -49,7 +49,7 @@ export const handleDownloadResumeDocx = async ({
 							text: fullResume.contact_info,
 							alignment: AlignmentType.CENTER,
 							spacing: {
-								after: 600, // Increased spacing after contact info
+								after: 600,
 							},
 						}),
 
@@ -60,10 +60,9 @@ export const handleDownloadResumeDocx = async ({
 							spacing: {
 								after: 200,
 							},
-							// Add border for all major section headers
 							border: {
 								bottom: {
-									color: '#000000', // Black color for major section headers
+									color: '#000000',
 									space: 1,
 									style: BorderStyle.SINGLE,
 									size: 1,
@@ -71,7 +70,7 @@ export const handleDownloadResumeDocx = async ({
 							},
 						}),
 
-						// Summary as bullet points from array (with indent)
+						// Summary as bullet points from array
 						...fullResume.summary.map(
 							(summaryPoint) =>
 								new Paragraph({
@@ -96,7 +95,7 @@ export const handleDownloadResumeDocx = async ({
 						// Add extra space after summary section
 						new Paragraph({
 							spacing: {
-								after: 400, // Increased spacing after summary section
+								after: 400,
 							},
 						}),
 
@@ -107,7 +106,6 @@ export const handleDownloadResumeDocx = async ({
 							spacing: {
 								after: 200,
 							},
-							// Add border for all major section headers
 							border: {
 								bottom: {
 									color: '#000000',
@@ -118,7 +116,7 @@ export const handleDownloadResumeDocx = async ({
 							},
 						}),
 
-						// Skills in two columns using a table (with indent for each bullet)
+						// Skills in two columns using a table
 						new Table({
 							width: {
 								size: 100,
@@ -196,15 +194,13 @@ export const handleDownloadResumeDocx = async ({
 						new Paragraph({
 							text: '',
 							spacing: {
-								after: 400, // Increased spacing after skills section
+								after: 400,
 							},
 						}),
 
 						// Add each work experience/other section
 						...fullResume.sections.flatMap((section, sectionIndex, allSections) => {
-							// Check if this is the Work Experience section
 							const isWorkExperience = section.title.toLowerCase().includes('experience');
-							// Check if this is the Education section
 							const isEducation = section.title.toLowerCase().includes('education');
 
 							// First add the section header
@@ -215,7 +211,6 @@ export const handleDownloadResumeDocx = async ({
 									spacing: {
 										after: 200,
 									},
-									// Add black border for all section headers
 									border: {
 										bottom: {
 											color: '#000000',
@@ -228,55 +223,49 @@ export const handleDownloadResumeDocx = async ({
 							];
 
 							if (isWorkExperience || isEducation) {
-								// Split experience/education blocks and process each job/education entry
+								// Split experience/education blocks and process each entry
 								const blocks = section.content.split(/\n\s*\n/);
 
 								blocks.forEach((block, blockIndex) => {
 									const lines = block.split('\n');
 
-									// First line should have job/degree and timespan
-									let titleText = '';
+									let titleText = ''; // Job Title or Degree
 									let entity = ''; // Company or Institution
 									let timespan = '';
 
 									if (lines.length > 0) {
-										// Try to extract title and timespan from the first line
-										// Assume format like "JOB TITLE | COMPANY | TIMESPAN" or "DEGREE | INSTITUTION | TIMESPAN"
 										const parts = lines[0].split('|');
 										if (parts.length > 1) {
-											titleText = parts[0].trim();
-
-											// If there are 3 parts, the middle is company/institution, last is timespan
+											// FIXED: Correct parsing order based on prompt format
+											// Format: "Company | Job Title | Timespan" or "Institution | Degree | Timespan"
 											if (parts.length > 2) {
-												entity = parts[1].trim();
-												timespan = parts[2].trim();
+												entity = parts[0].trim(); // Company/Institution
+												titleText = parts[1].trim(); // Job Title/Degree
+												timespan = parts[2].trim(); // Timespan
 											} else {
-												// If only 2 parts, second is timespan
+												entity = parts[0].trim();
 												timespan = parts[1].trim();
 
-												// For education, next line should be institution
-												if (isEducation && lines.length > 1) {
-													entity = lines[1].trim();
+												if (lines.length > 1) {
+													titleText = lines[1].trim();
 												}
 											}
 										} else {
-											// Fallback if no pipe separators
-											titleText = lines[0].trim();
+											entity = lines[0].trim();
 											if (lines.length > 1) {
-												entity = lines[1].trim();
+												titleText = lines[1].trim();
 											}
 										}
 									}
 
-									// Add title and timespan on the same line with title on left, timespan on right
+									// Add company/institution and timespan on the same line (BOLD)
 									sectionElements.push(
 										new Paragraph({
 											children: [
 												new TextRun({
-													text: titleText,
+													text: entity,
 													bold: true,
 												}),
-												// Add a tab to push timespan to the right
 												new TextRun({
 													text: '\t' + timespan,
 													bold: true,
@@ -288,30 +277,32 @@ export const handleDownloadResumeDocx = async ({
 											tabStops: [
 												{
 													type: 'right',
-													position: 9000, // This should align to the right margin
+													position: 9000,
 												},
 											],
 										}),
 									);
 
-									// Add company/institution on next line
+									// Add job title/degree on next line (NORMAL, slightly larger)
 									sectionElements.push(
 										new Paragraph({
-											text: entity,
+											children: [
+												new TextRun({
+													text: titleText,
+													size: 22, // Slightly larger than default (20)
+												}),
+											],
 											spacing: {
 												after: 150,
 											},
 										}),
 									);
 
-									// Add bullet points for responsibilities/achievements or education details
+									// Add bullet points for responsibilities/achievements
 									let startBullets = 1;
-									if (entity && lines.length > 1 && !lines[1].includes(entity)) {
+									if (entity && lines.length > 1 && lines[1].trim() === entity) {
 										startBullets = 2;
-									}
-
-									// If this is education and second line is institution, start bullets from line 3
-									if (isEducation && lines.length > 1 && lines[1].trim() === entity) {
+									} else if (titleText && lines.length > 1 && lines[1].trim() === titleText) {
 										startBullets = 2;
 									}
 
@@ -322,7 +313,6 @@ export const handleDownloadResumeDocx = async ({
 
 										bulletPointCount++;
 
-										// Add bullet point with hanging indent
 										if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
 											sectionElements.push(
 												new Paragraph({
@@ -351,9 +341,8 @@ export const handleDownloadResumeDocx = async ({
 										}
 									}
 
-									// For Work Experience, ensure at least 3 bullet points (fallback if Claude didn't provide enough)
+									// For Work Experience, ensure at least 3 bullet points
 									if (isWorkExperience && bulletPointCount < 3) {
-										// Add generic bullet points if needed to reach minimum of 3
 										for (let i = bulletPointCount; i < 3; i++) {
 											sectionElements.push(
 												new Paragraph({
@@ -373,7 +362,7 @@ export const handleDownloadResumeDocx = async ({
 										}
 									}
 
-									// Add a separator between entries except for the last one
+									// Add separator between entries except for the last one
 									if (blockIndex < blocks.length - 1) {
 										sectionElements.push(
 											new Paragraph({
@@ -382,7 +371,7 @@ export const handleDownloadResumeDocx = async ({
 												},
 												border: {
 													bottom: {
-														color: '#CCCCCC', // Light gray color for the line
+														color: '#CCCCCC',
 														space: 1,
 														style: BorderStyle.SINGLE,
 														size: 1,
@@ -391,7 +380,6 @@ export const handleDownloadResumeDocx = async ({
 											}),
 										);
 
-										// Add extra space after the separator
 										sectionElements.push(
 											new Paragraph({
 												spacing: {
@@ -404,7 +392,7 @@ export const handleDownloadResumeDocx = async ({
 
 								return sectionElements;
 							} else {
-								// For other sections, process normally
+								// For other sections (Achievements, Certifications, etc.), process normally
 								const sectionContent = [
 									...section.content.split('\n').map((line, lineIndex) => {
 										const trimmedLine = line.trim();
@@ -419,7 +407,6 @@ export const handleDownloadResumeDocx = async ({
 											trimmedLine.startsWith('-') ||
 											trimmedLine.startsWith('*')
 										) {
-											// This is a bullet point - keep as is
 											return new Paragraph({
 												text: trimmedLine,
 												spacing: { after: 120 },
@@ -429,10 +416,16 @@ export const handleDownloadResumeDocx = async ({
 												},
 											});
 										} else {
-											// Other lines - format as regular text
 											return new Paragraph({
-												text: trimmedLine,
+												children: [
+													new TextRun({ text: '• ' }),
+													new TextRun({ text: trimmedLine }),
+												],
 												spacing: { after: 120 },
+												indent: {
+													left: 120,
+													hanging: 120,
+												},
 											});
 										}
 									}),
@@ -614,34 +607,41 @@ export const handleDownloadResumePdf = async ({
 			const isWorkExperience = section.title.toLowerCase().includes('experience');
 			const isEducation = section.title.toLowerCase().includes('education');
 
-			// Handle both work experience and education with the same structured approach
+			// Handle both work experience and education with the corrected structured approach
 			if (isWorkExperience || isEducation) {
 				const blocks = section.content.split(/\n\s*\n/);
 				for (let blockIndex = 0; blockIndex < blocks.length; blockIndex++) {
 					const block = blocks[blockIndex];
 					const lines = block.split('\n');
 
-					let titleText = '';
+					let titleText = ''; // Job Title or Degree
 					let entity = ''; // Company or Institution
 					let timespan = '';
 
 					if (lines.length > 0) {
 						const parts = lines[0].split('|');
 						if (parts.length > 1) {
-							titleText = parts[0].trim();
+							// FIXED: Correct the parsing order based on prompt format
+							// Format: "Company | Job Title | Timespan" or "Institution | Degree | Timespan"
 							if (parts.length > 2) {
-								entity = parts[1].trim();
-								timespan = parts[2].trim();
+								entity = parts[0].trim(); // Company/Institution (for bold display)
+								titleText = parts[1].trim(); // Job Title/Degree (for normal display)
+								timespan = parts[2].trim(); // Timespan
 							} else {
+								// If only 2 parts, assume "Entity | Timespan"
+								entity = parts[0].trim();
 								timespan = parts[1].trim();
+
+								// Look for title/degree in next line
 								if (lines.length > 1) {
-									entity = lines[1].trim();
+									titleText = lines[1].trim();
 								}
 							}
 						} else {
-							titleText = lines[0].trim();
+							// Fallback if no pipe separators
+							entity = lines[0].trim();
 							if (lines.length > 1) {
-								entity = lines[1].trim();
+								titleText = lines[1].trim();
 							}
 						}
 					}
@@ -651,7 +651,7 @@ export const handleDownloadResumePdf = async ({
 						yPos = margin;
 					}
 
-					// Company/Institution on left and timespan on right (bold)
+					// Company/Institution on left (BOLD) and timespan on right (BOLD)
 					doc.setFont('Helvetica', 'bold');
 					doc.setFontSize(11);
 					doc.text(entity, margin, yPos);
@@ -659,12 +659,13 @@ export const handleDownloadResumePdf = async ({
 					doc.text(timespan, pageWidth - margin - timespanWidth, yPos);
 					yPos += 5;
 
-					// Job title/degree name
+					// Job title/degree name (NORMAL, slightly larger font)
 					doc.setFont('Helvetica', 'normal');
-					doc.setFontSize(10);
+					doc.setFontSize(11); // Increased from 10 to 11 for better visibility
 					doc.text(titleText, margin, yPos);
 					yPos += 6;
 
+					// Determine where to start looking for bullet points
 					let startBullets = 1;
 					// If entity is on second line, start bullets from third line
 					if (entity && lines.length > 1 && lines[1].trim() === entity) {
@@ -674,8 +675,8 @@ export const handleDownloadResumePdf = async ({
 					else if (entity && lines[0].includes('|') && lines[0].includes(entity)) {
 						startBullets = 1;
 					}
-					// Default case - entity might be on second line
-					else if (entity && lines.length > 1 && !lines[1].includes(entity)) {
+					// If titleText is on second line, start bullets from third line
+					else if (titleText && lines.length > 1 && lines[1].trim() === titleText) {
 						startBullets = 2;
 					}
 
@@ -693,6 +694,11 @@ export const handleDownloadResumePdf = async ({
 						if (!line.startsWith('•') && !line.startsWith('-') && !line.startsWith('*')) {
 							bulletLine = '• ' + line;
 						}
+
+						// Set font back to normal size for bullet points
+						doc.setFont('Helvetica', 'normal');
+						doc.setFontSize(10);
+
 						const wrappedText = doc.splitTextToSize(bulletLine, contentWidth);
 						wrappedText.forEach((txt, idx) => {
 							doc.text(txt, idx === 0 ? margin : margin + bulletMargin, yPos);
@@ -710,6 +716,8 @@ export const handleDownloadResumePdf = async ({
 							}
 
 							const genericBullet = `• Additional responsibility related to ${titleText} role.`;
+							doc.setFont('Helvetica', 'normal');
+							doc.setFontSize(10);
 							const wrappedText = doc.splitTextToSize(genericBullet, contentWidth);
 							wrappedText.forEach((txt, idx) => {
 								doc.text(txt, idx === 0 ? margin : margin + bulletMargin, yPos);
@@ -718,6 +726,7 @@ export const handleDownloadResumePdf = async ({
 						}
 					}
 
+					// Add separator between entries except for the last one
 					if (blockIndex < blocks.length - 1) {
 						yPos += 4;
 						if (yPos < pageHeight - margin) {
@@ -729,7 +738,7 @@ export const handleDownloadResumePdf = async ({
 					}
 				}
 			} else {
-				// Process other sections normally
+				// Process other sections (Achievements, Certifications, etc.) normally
 				doc.setFont('Helvetica', 'normal');
 				doc.setFontSize(10);
 				const contentLines = section.content.split('\n');
