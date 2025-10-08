@@ -30,9 +30,23 @@ pnpm dev
 
 Run extensions:
 - pnpm dev
+    - this will create or update a local "build" folder
+    - go to "chrome://extensions/"
+    - check if Developer mode is enabled
+    - Load unpacked
+    - choose build\chrome-mv3-dev
 
 - pnpm build
+    - go to "sidepanel.b7741352.js" file
     - remove the "pdfobjectnewwindow" case entirely 
     - this is to remove the "https://cdnjs.cloudflare.com/ajax/libs/pdfobject/2.1.1/pdfobject.min.js" to pass google privacy review for each new version
 
 - pnpm package
+
+---------------------------------------------------------------------------------------------
+
+Publish new updated extension:
+    - go to chrome web store -> developer dashboard
+    - click on existing item only
+    - to go package 
+    - click on upload new package (make sure the new version num is updated as well in the package.json)

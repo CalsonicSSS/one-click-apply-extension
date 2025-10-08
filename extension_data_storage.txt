@@ -1,0 +1,31 @@
+All data is stored in chrome.storage.local (10MB limit) for this extension
+this "chrome.storage.local" can be accessed:
+    - inspect on sidepanel and nav to application tab
+    - click "service worker" on the extension directly from chrome://extensions/
+
+5 Main Data Types:
+
+1. browserId 
+    - User identifier (UUID string) 
+    - Created once on install
+
+
+2. storedFiles 
+    - Resume + supporting docs (base64 encoded)
+    - Max 5MB total
+    - Managed by useFileManagement hook
+
+
+3. allSuggestions 
+    - Tab-specific generation results
+    - Keyed by tabId: { job_title, cover_letter, resume_suggestions, etc. }
+    - Cleaned when tab closes
+
+4. allAnsweredQuestions 
+    - Tab-specific Q&A answers
+    - Keyed by tabId: [{ question, answer, createdAt }]
+    - Cleaned when tab closes
+    
+5. activePanelTabs (NEW from fix) - Which tabs have panel open
+    - Keyed by tabId: true
+    - Persists across browser restarts!

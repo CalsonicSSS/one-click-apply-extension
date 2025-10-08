@@ -1,7 +1,7 @@
 {
 	"name": "one-click-apply",
 	"displayName": "One Click Apply",
-	"version": "0.2.3",
+	"version": "0.2.4",
 	"description": "Your tailored resume & CV, just one click away—on any job site you visit!",
 	"author": "Pillar.ai <calson.developer@gmail.com>",
 	"scripts": {
