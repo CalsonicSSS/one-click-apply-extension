@@ -13,6 +13,9 @@
 // Background script for side panel management with improved multi-window URL tracking
 // No exports - background scripts communicate via message passing only
 
+// background.ts - FIXED VERSION with state persistence
+// Service workers in MV3 are ephemeral - must use chrome.storage to persist state
+
 let currentUrl: string = '';
 let currentWindowId: number = -1;
 let currentTabId: number = -1;
@@ -20,21 +23,16 @@ let currentTabId: number = -1;
 // Helper function to get the currently active tab across all windows
 async function getCurrentActiveTab(): Promise<chrome.tabs.Tab | null> {
 	try {
-		// Get all windows
 		const windows = await chrome.windows.getAll({ populate: true });
-
-		// Find the focused window first
 		const focusedWindow = windows.find((window) => window.focused);
 
 		if (focusedWindow && focusedWindow.tabs) {
-			// Find active tab in focused window
 			const activeTab = focusedWindow.tabs.find((tab) => tab.active);
 			if (activeTab && activeTab.url) {
 				return activeTab;
 			}
 		}
 
-		// Fallback: if no focused window, get the last focused window
 		const lastFocusedWindow = await chrome.windows.getLastFocused({ populate: true });
 		if (lastFocusedWindow && lastFocusedWindow.tabs) {
 			const activeTab = lastFocusedWindow.tabs.find((tab) => tab.active);
@@ -50,58 +48,92 @@ async function getCurrentActiveTab(): Promise<chrome.tabs.Tab | null> {
 	}
 }
 
-// Helper function to update current URL tracking
 async function updateCurrentUrl(): Promise<void> {
 	const activeTab = await getCurrentActiveTab();
 	if (activeTab && activeTab.url) {
 		currentUrl = activeTab.url;
 		currentWindowId = activeTab.windowId;
 		currentTabId = activeTab.id || -1;
-		console.log('current URL:', currentUrl, 'Window:', currentWindowId, 'Tab:', currentTabId);
+		console.log('Current URL:', currentUrl, 'Window:', currentWindowId, 'Tab:', currentTabId);
 	}
 }
 
-// Initialize current URL on startup
-chrome.runtime.onStartup.addListener(async () => {
-	console.log('Extension startup - initializing URL tracking');
-	await updateCurrentUrl();
-});
+// ============================================================================
+// CRITICAL FIX: Initialize state from storage on startup
+// ============================================================================
 
+async function initializeSidePanelState() {
+	try {
+		// Get persisted state from storage
+		const result = await chrome.storage.local.get(['activePanelTabs']);
+		const activePanelTabs = result.activePanelTabs || {};
+
+		// Disable side panel globally by default
+		await chrome.sidePanel.setOptions({ enabled: false });
+
+		// Re-enable for tabs that had it open
+		for (const tabIdStr in activePanelTabs) {
+			const tabId = parseInt(tabIdStr);
+			if (activePanelTabs[tabIdStr]) {
+				await chrome.sidePanel.setOptions({
+					tabId: tabId,
+					path: 'sidepanel.html',
+					enabled: true,
+				});
+			}
+		}
+
+		console.log('Side panel state initialized from storage:', activePanelTabs);
+	} catch (error) {
+		console.error('Error initializing side panel state:', error);
+	}
+}
+
+// ============================================================================
+// LIFECYCLE LISTENERS - Register at top level (synchronously)
+// ============================================================================
+
+// Called when extension is first installed/updated
 chrome.runtime.onInstalled.addListener(async () => {
-	console.log('Extension installed - initializing URL tracking');
+	console.log('Extension installed/updated');
+	await initializeSidePanelState();
 	await updateCurrentUrl();
 });
 
-// Fires when user switches tabs within a window
+// CRITICAL: Called when browser starts - this was missing!
+chrome.runtime.onStartup.addListener(async () => {
+	console.log('Browser startup - restoring side panel state');
+	await initializeSidePanelState();
+	await updateCurrentUrl();
+});
+
+// Tab/window event listeners
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
 	console.log('Tab activated:', activeInfo.tabId, 'in window:', activeInfo.windowId);
 	await updateCurrentUrl();
 });
 
-// Fires when tab URL is updated (e.g., navigation or reload)
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-	// Only update if this is the active tab and URL changed
 	if (changeInfo.url && tab.active) {
 		console.log('Tab URL updated:', tabId, changeInfo.url);
 		await updateCurrentUrl();
 	}
 });
 
-// CRUCIAL: Fires when window focus changes between different browser windows
 chrome.windows.onFocusChanged.addListener(async (windowId) => {
 	if (windowId !== chrome.windows.WINDOW_ID_NONE) {
 		console.log('Window focus changed to:', windowId);
-		// This is what fixes your multi-window issue!
 		await updateCurrentUrl();
 	}
 });
 
-// MESSAGE LISTENER - This is the correct pattern for Chrome extensions
+// ============================================================================
+// MESSAGE HANDLER
+// ============================================================================
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	if (message.action === 'getCurrentUrl') {
-		console.log('getCurrentUrl message request received in background worker');
-
-		// Handle the promise manually instead of using async/await
+		console.log('getCurrentUrl message request received');
 		updateCurrentUrl()
 			.then(() => {
 				sendResponse({
@@ -118,100 +150,100 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 					error: error?.message || 'Unknown error',
 				});
 			});
-
-		return true; // Keep channel open
+		return true;
 	}
 	return false;
 });
 
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------
-// FIXED: Side Panel Management for TRUE tab-specific behavior
+// ============================================================================
+// SIDE PANEL MANAGEMENT - With State Persistence
+// ============================================================================
 
-const activePanelTabs: Set<number> = new Set();
-
-// CRITICAL: Initialize tab-specific behavior
-chrome.runtime.onInstalled.addListener(() => {
-	try {
-		// OPTION 1: Disable all default behavior
-		chrome.sidePanel.setOptions({
-			enabled: false, // Disable globally by default
-		});
-
-		console.log('SidePanel initialized with tab-specific behavior');
-	} catch (error) {
-		console.error('Error initializing side panel:', error);
-	}
-});
-
-// FIXED: Simplified action click handler that respects user gesture
 chrome.action.onClicked.addListener((tab) => {
 	if (!tab?.id) return;
 
 	try {
-		// STEP 1: Immediately configure the side panel for this specific tab (preserves user gesture)
+		// CRITICAL: Must call setOptions and open() synchronously to preserve user gesture
+		// Step 1: Configure the side panel for this specific tab
 		chrome.sidePanel.setOptions({
 			tabId: tab.id,
 			path: 'sidepanel.html',
 			enabled: true,
 		});
 
-		// STEP 2: Immediately open using the user gesture (no await to preserve gesture chain)
+		// Step 2: Open the side panel immediately (preserves user gesture)
 		chrome.sidePanel
 			.open({ tabId: tab.id })
 			.then(() => {
-				activePanelTabs.add(tab.id);
 				console.log(`Opened side panel for tab ${tab.id}`);
+
+				// Step 3: Persist the state AFTER opening (async is ok here)
+				return chrome.storage.local.get(['activePanelTabs']);
+			})
+			.then((result) => {
+				const activePanelTabs = result.activePanelTabs || {};
+				activePanelTabs[tab.id] = true;
+				return chrome.storage.local.set({ activePanelTabs });
+			})
+			.then(() => {
+				console.log(`Persisted side panel state for tab ${tab.id}`);
 			})
 			.catch((error) => {
-				console.error('Error opening side panel:', error);
+				console.error('Error persisting side panel state:', error);
 			});
 	} catch (error) {
-		console.error('Error setting up side panel:', error);
+		console.error('Error opening side panel:', error);
 	}
 });
 
-// Initialize all tabs to have side panel disabled by default
-chrome.runtime.onInstalled.addListener(() => {
-	chrome.sidePanel.setOptions({
-		enabled: false,
-	});
-});
-
 // Disable side panel for new tabs by default
-chrome.tabs.onCreated.addListener((tab) => {
+chrome.tabs.onCreated.addListener(async (tab) => {
 	if (tab.id) {
-		chrome.sidePanel.setOptions({
+		await chrome.sidePanel.setOptions({
 			tabId: tab.id,
 			enabled: false,
 		});
 	}
 });
 
-// Clean up tab-specific stored data
-async function cleanupTabSpecificStoredGenData(tabId: number) {
+// Clean up when tabs are removed
+chrome.tabs.onRemoved.addListener(async (tabId) => {
 	try {
-		const storageResult = await chrome.storage.local.get(['allSuggestions', 'allAnsweredQuestions']);
+		// Clean up tab-specific data
+		const storageResult = await chrome.storage.local.get([
+			'allSuggestions',
+			'allAnsweredQuestions',
+			'activePanelTabs',
+		]);
 
+		// Clean suggestions
 		const allSuggestions = storageResult.allSuggestions || {};
 		if (allSuggestions[tabId]) {
 			delete allSuggestions[tabId];
-			await chrome.storage.local.set({ allSuggestions });
 		}
 
+		// Clean answered questions
 		const allAnsweredQuestions = storageResult.allAnsweredQuestions || {};
 		if (allAnsweredQuestions[tabId]) {
 			delete allAnsweredQuestions[tabId];
-			await chrome.storage.local.set({ allAnsweredQuestions });
 		}
+
+		// Clean panel state
+		const activePanelTabs = storageResult.activePanelTabs || {};
+		if (activePanelTabs[tabId]) {
+			delete activePanelTabs[tabId];
+		}
+
+		// Save all changes
+		await chrome.storage.local.set({
+			allSuggestions,
+			allAnsweredQuestions,
+			activePanelTabs,
+		});
+
+		console.log(`Cleaned up data for closed tab ${tabId}`);
 	} catch (error) {
 		console.error('Error cleaning up tab data:', error);
-	}
-}
-
-chrome.tabs.onRemoved.addListener((tabId) => {
-	if (activePanelTabs.has(tabId)) {
-		cleanupTabSpecificStoredGenData(tabId);
-		activePanelTabs.delete(tabId);
 	}
 });
 
