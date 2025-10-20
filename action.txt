@@ -34,9 +34,10 @@ Run extensions:
     - go to "chrome://extensions/"
     - check if Developer mode is enabled
     - Load unpacked
-    - choose build\chrome-mv3-dev
+    - choose build\chrome-mv3-dev for testing purpose
 
 - pnpm build
+    - delete build folder (to start fresh)
     - go to "sidepanel.b7741352.js" file
     - remove the "pdfobjectnewwindow" case entirely 
     - this is to remove the "https://cdnjs.cloudflare.com/ajax/libs/pdfobject/2.1.1/pdfobject.min.js" to pass google privacy review for each new version
@@ -50,3 +51,4 @@ Publish new updated extension:
     - click on existing item only
     - to go package 
     - click on upload new package (make sure the new version num is updated as well in the package.json)
+    - submit for review
