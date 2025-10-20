@@ -309,7 +309,10 @@ export const handleDownloadResumeDocx = async ({
 											sectionElements.push(
 												new Paragraph({
 													text: line,
-													spacing: { after: 80 }, // Reduced spacing
+													spacing: {
+														after: 120, // Bigger spacing between bullets
+														line: 240, // Tighter spacing within bullet (wrapped lines)
+													},
 													indent: {
 														left: 120,
 														hanging: 120,
@@ -323,7 +326,10 @@ export const handleDownloadResumeDocx = async ({
 														new TextRun({ text: '• ' }),
 														new TextRun({ text: line }),
 													],
-													spacing: { after: 80 }, // Reduced spacing
+													spacing: {
+														after: 120, // Bigger spacing between bullets
+														line: 240, // Tighter spacing within bullet (wrapped lines)
+													},
 													indent: {
 														left: 120,
 														hanging: 120,
@@ -333,28 +339,12 @@ export const handleDownloadResumeDocx = async ({
 										}
 									}
 
-									// Add separator between entries (lighter line)
+									// Add spacing between entries (no separator line)
 									if (blockIndex < blocks.length - 1) {
 										sectionElements.push(
 											new Paragraph({
 												spacing: {
-													after: 100, // Reduced spacing
-												},
-												border: {
-													bottom: {
-														color: '#CCCCCC',
-														space: 1,
-														style: BorderStyle.SINGLE,
-														size: 3,
-													},
-												},
-											}),
-										);
-
-										sectionElements.push(
-											new Paragraph({
-												spacing: {
-													after: 100, // Reduced spacing
+													after: 150, // Just spacing between job entries
 												},
 											}),
 										);
@@ -657,9 +647,9 @@ export const handleDownloadResumePdf = async ({
 							doc.text(txt, idx === 0 ? margin : margin + bulletMargin, yPos);
 							// Smaller spacing within wrapped lines (3.8), bigger spacing after bullet ends
 							if (idx < wrappedLines.length - 1) {
-								yPos += 3.8; // Smaller spacing within bullet (wrapped lines)
+								yPos += 3; // Smaller spacing within bullet (wrapped lines)
 							} else {
-								yPos += 5; // Bigger spacing between bullets
+								yPos += 6; // Bigger spacing between bullets
 							}
 						});
 					}

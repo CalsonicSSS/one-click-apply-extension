@@ -35,6 +35,7 @@ Run extensions:
     - check if Developer mode is enabled
     - Load unpacked
     - choose build\chrome-mv3-dev for testing purpose
+    - it will also hot reload
 
 - pnpm build
     - delete build folder (to start fresh)

@@ -3,7 +3,6 @@ import FileTypeIcon from '@/components/FileTypeIcon';
 import GenerationProgressBar from '@/components/GenerationProgressBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { FilesStorageState } from '@/types/fileManagement';
 import { GenerationStage, type GenerationProgress } from '@/types/progressTracking';
 import { Trash2, Upload } from 'lucide-react';
@@ -91,17 +90,18 @@ const ProfileTab = ({
 				</div>
 			)}
 			{/* File upload buttons */}
-			<div className='grid w-full grid-cols-2 gap-x-3'>
+			{/* <div className='grid w-full grid-cols-2 gap-x-3'> */}
+			<div className='w-full'>
 				<Button
 					variant='default'
 					size='sm'
-					className='items-center hover:opacity-90'
+					className='w-full items-center hover:opacity-90'
 					onClick={() => resumeInputRef.current?.click()}
 				>
 					<Upload className='mr-1 h-3.5 w-3.5' />
-					{'Resume *'}
+					Upload Resume (PDF only) *
 				</Button>
-				<TooltipProvider delayDuration={300}>
+				{/* <TooltipProvider delayDuration={300}>
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<Button
@@ -124,7 +124,7 @@ const ProfileTab = ({
 							</p>
 						</TooltipContent>
 					</Tooltip>
-				</TooltipProvider>
+				</TooltipProvider> */}
 
 				{/* Hidden file inputs */}
 				<input
@@ -134,13 +134,13 @@ const ProfileTab = ({
 					onChange={(e) => handleFileChange(e, 'resume')}
 					accept='.pdf,.docx,.txt'
 				/>
-				<input
+				{/* <input
 					ref={supportingInputRef}
 					type='file'
 					className='hidden'
 					onChange={(e) => handleFileChange(e, 'supporting')}
 					accept='.pdf,.docx,.txt'
-				/>
+				/> */}
 			</div>
 			{/* Files Section */}
 			<div className='space-y-2'>

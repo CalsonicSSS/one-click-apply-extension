@@ -26,7 +26,7 @@ export const calculateBase64Size = (file: File): number => {
 
 export const validateFileUpload = (file: File, currentUploadedFiles: StoredFile[]): string | null => {
 	if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-		return 'Invalid file type. Please upload PDF, DOCX, or TXT files only.';
+		return 'Invalid file type. Please upload PDF files only.';
 	}
 
 	// Calculate current total storage size
