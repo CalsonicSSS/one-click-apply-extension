@@ -51,5 +51,5 @@ Publish new updated extension:
     - go to chrome web store -> developer dashboard
     - click on existing item only
     - to go package 
-    - click on upload new package (make sure the new version num is updated as well in the package.json)
+    - click on "upload new package" (make sure the new version num is updated as well in the package.json)
     - submit for review
